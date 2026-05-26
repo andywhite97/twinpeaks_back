@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Exit on error
+set -o errexit
+
 # Build script for Render
 echo "Installing dependencies..."
 pip install -r requirements.txt
