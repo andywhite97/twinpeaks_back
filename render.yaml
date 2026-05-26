@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: twinpeaks_back
+    name: twinpeaks-back
     env: python
     plan: free
     buildCommand: bash build.sh
@@ -13,7 +13,7 @@ services:
       - key: DJANGO_DEBUG
         value: "False"
       - key: DJANGO_ALLOWED_HOSTS
-        value: twinpeaks_back.render.com,localhost
+        value: twinpeaks-back.render.com,localhost
       - key: DATABASE_URL
         fromDatabase:
           name: twinpeaks-sql
