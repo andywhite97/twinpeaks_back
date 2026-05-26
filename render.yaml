@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: twinpeaks_back
+    env: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn twinpeaks.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DJANGO_SECRET_KEY
+        value: ln%%qn5z+^z@4owlm#o%pn=1&_z!*!kv10+rm2qn4$!z)bjy=4
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: twinpeaks_back.render.com,localhost
+      - key: DATABASE_URL
+        fromDatabase:
+          name: twinpeaks-sql
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://andywhite97.github.io/twinpeaks"
+      - key: EMAIL_HOST_USER
+        value: your-email@gmail.com
+      - key: EMAIL_HOST_PASSWORD
+        value: your-app-password
+      - key: SECURE_SSL_REDIRECT
+        value: "True"
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: CSRF_COOKIE_SECURE
+        value: "True"
