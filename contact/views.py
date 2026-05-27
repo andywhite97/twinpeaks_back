@@ -15,7 +15,8 @@ class ContactMessageCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         message = serializer.save()
-
+        print(message)
+        
         send_mail(
             subject=f"New Contact Message from {message.name}",
             message=message.message,
