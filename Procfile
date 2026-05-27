@@ -1,1 +1,1 @@
-web: gunicorn twinpeaks.wsgi:application
+web: gunicorn twinpeaks.wsgi:application --timeout 120
