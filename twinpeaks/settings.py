@@ -208,8 +208,12 @@ STATICFILES_DIRS = [
 
 # WhiteNoise storage for efficient static file serving
 STORAGES = {
-    'default': 'django.core.files.storage.FileSystemStorage',
-    'staticfiles': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
 }
 
 MEDIA_URL = "/media/"
