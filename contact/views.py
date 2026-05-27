@@ -20,7 +20,7 @@ class ContactMessageCreateView(CreateAPIView):
             subject=f"New Contact Message from {message.name}",
             message=message.message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=["andileblessinghlophe@gmail.com", "thabscebisa@gmail.com"],
+            recipient_list=['andileblessinghlophe@gmail.com'],
             fail_silently=False,
         )
 
