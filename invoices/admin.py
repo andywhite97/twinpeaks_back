@@ -34,8 +34,14 @@ class InvoiceAdmin(admin.ModelAdmin):
 
 @admin.register(InvoiceItem)
 class InvoiceItemAdmin(admin.ModelAdmin):
-    list_display = ("invoice", "product_name", "quantity", "unit_price", "line_total")
-    search_fields = ("invoice__invoice_number", "product_name", "product__name")
+    list_display = (
+        "product_name",
+        "quantity",
+        "unit_price",
+        "line_total",
+        "invoice_numbers",
+    )
+    search_fields = ("invoices__invoice_number", "product_name", "product__name")
     readonly_fields = (
         "product_name",
         "product_description",
@@ -43,3 +49,6 @@ class InvoiceItemAdmin(admin.ModelAdmin):
         "line_total",
         "created_at",
     )
+
+    def invoice_numbers(self, item):
+        return ", ".join(item.invoices.values_list("invoice_number", flat=True))

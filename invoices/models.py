@@ -54,7 +54,11 @@ class Invoice(models.Model):
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
     tax = models.DecimalField(max_digits=12, decimal_places=2)
     total = models.DecimalField(max_digits=12, decimal_places=2)
-    items = models.JSONField()
+    items = models.ManyToManyField(
+        "InvoiceItem",
+        related_name="invoices",
+        blank=True,
+    )
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -78,11 +82,6 @@ class Invoice(models.Model):
 
 
 class InvoiceItem(models.Model):
-    invoice = models.ForeignKey(
-        Invoice,
-        on_delete=models.CASCADE,
-        related_name="line_items",
-    )
     product = models.ForeignKey(
         Product,
         on_delete=models.PROTECT,

@@ -81,18 +81,6 @@ class InvoiceGenerateView(APIView):
         }
         workbook = build_invoice_workbook(workbook_data)
         subtotal, tax, total = calculate_invoice_totals(workbook_data)
-        item_snapshots = [
-            {
-                "product_id": item["product"].id,
-                "product_slug": item["product"].slug,
-                "product_name": item["product"].name,
-                "product_description": item["product"].description,
-                "quantity": str(item["quantity"]),
-                "unit_price": str(item["product"].price),
-                "line_total": str(item["quantity"] * item["product"].price),
-            }
-            for item in data["items"]
-        ]
         invoice = Invoice.objects.create(
             invoice_number=invoice_number,
             customer=customer,
@@ -105,13 +93,11 @@ class InvoiceGenerateView(APIView):
             subtotal=subtotal,
             tax=tax,
             total=total,
-            items=item_snapshots,
             generated_by=request.user if request.user.is_authenticated else None,
         )
-        InvoiceItem.objects.bulk_create(
+        invoice_items = InvoiceItem.objects.bulk_create(
             [
                 InvoiceItem(
-                    invoice=invoice,
                     product=item["product"],
                     product_name=item["product"].name,
                     product_description=item["product"].description,
@@ -122,6 +108,7 @@ class InvoiceGenerateView(APIView):
                 for item in data["items"]
             ]
         )
+        invoice.items.add(*invoice_items)
         filename = f"invoice-{invoice_number}.xlsx"
 
         return FileResponse(

@@ -88,8 +88,8 @@ class InvoiceGenerateViewTests(TestCase):
         self.assertEqual(invoice.tax, 37.5)
         self.assertEqual(invoice.total, 287.5)
         self.assertEqual(invoice.generated_by, self.admin)
-        self.assertEqual(invoice.line_items.count(), 2)
-        line_item = invoice.line_items.get(product=self.assessment)
+        self.assertEqual(invoice.items.count(), 2)
+        line_item = invoice.items.get(product=self.assessment)
         self.assertEqual(line_item.product_name, "Site assessment")
         self.assertEqual(line_item.unit_price, 100)
         self.assertEqual(line_item.line_total, 200)
@@ -141,7 +141,6 @@ class InvoiceGenerateViewTests(TestCase):
             subtotal="100.00",
             tax="15.00",
             total="115.00",
-            items=[],
             generated_by=self.admin,
         )
 
@@ -179,8 +178,8 @@ class InvoiceGenerateViewTests(TestCase):
         self.assessment.price = "150.00"
         self.assessment.save()
 
-        line_item = InvoiceItem.objects.get(invoice__invoice_number="INV-004")
         invoice = Invoice.objects.get(invoice_number="INV-004")
+        line_item = invoice.items.get()
         self.assertEqual(line_item.unit_price, 100)
         self.assertEqual(line_item.line_total, 100)
         self.assertEqual(invoice.subtotal, 100)

@@ -57,10 +57,14 @@ class InvoiceSerializer(serializers.ModelSerializer):
     customer_location = serializers.CharField(source="customer.location", read_only=True)
     customer_email = serializers.EmailField(source="customer.email", read_only=True)
     customer_phone = serializers.CharField(source="customer.phone", read_only=True)
+    items = serializers.SerializerMethodField()
     line_items = serializers.SerializerMethodField()
 
+    def get_items(self, invoice):
+        return InvoiceLineItemSerializer(invoice.items.all(), many=True).data
+
     def get_line_items(self, invoice):
-        return InvoiceLineItemSerializer(invoice.line_items.all(), many=True).data
+        return self.get_items(invoice)
 
     class Meta:
         model = Invoice
