@@ -33,6 +33,7 @@ class Customer(models.Model):
 
 
 class Invoice(models.Model):
+
     class Status(models.TextChoices):
         QUOTE = "quote", "Quote"
         INVOICE = "invoice", "Invoice"
@@ -87,15 +88,31 @@ class InvoiceItem(models.Model):
         on_delete=models.PROTECT,
         related_name="invoice_items",
     )
-    product_name = models.CharField(max_length=150)
+    product_name = models.CharField(max_length=150, null=True, blank=True)
     product_description = models.TextField(blank=True)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
-    line_total = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    line_total = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["id"]
+
+    def save(self, *args, **kwargs):
+        # Capture product details at time of creation
+        if self.product:
+            if not self.product_name:
+                self.product_name = self.product.name
+            if not self.product_description:
+                self.product_description = self.product.description or ""
+            if not self.unit_price:
+                self.unit_price = self.product.price
+        
+        # Calculate line total
+        if self.unit_price and self.quantity:
+            self.line_total = self.unit_price * self.quantity
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.product_name} x {self.quantity}"
