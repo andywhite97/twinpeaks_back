@@ -32,56 +32,6 @@ class Customer(models.Model):
         return f"{self.name} - {self.email}"
 
 
-class Invoice(models.Model):
-
-    class Status(models.TextChoices):
-        QUOTE = "quote", "Quote"
-        INVOICE = "invoice", "Invoice"
-        PAID = "paid", "Paid"
-        CANCELLED = "cancelled", "Cancelled"
-
-    invoice_number = models.CharField(max_length=50, unique=True)
-    customer = models.ForeignKey(
-        Customer,
-        on_delete=models.PROTECT,
-        related_name="invoices",
-    )
-    invoice_date = models.DateField()
-    due_date = models.DateField(null=True, blank=True)
-    salesperson = models.CharField(max_length=120, blank=True)
-    job = models.CharField(max_length=120, blank=True)
-    payment_terms = models.CharField(max_length=120, blank=True)
-    tax_rate = models.DecimalField(max_digits=5, decimal_places=4, default=0.15)
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
-    tax = models.DecimalField(max_digits=12, decimal_places=2)
-    total = models.DecimalField(max_digits=12, decimal_places=2)
-    items = models.ManyToManyField(
-        "InvoiceItem",
-        related_name="invoices",
-        blank=True,
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.QUOTE,
-    )
-    generated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="generated_invoices",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.invoice_number} - {self.customer.name}"
-
-
 class InvoiceItem(models.Model):
     product = models.ForeignKey(
         Product,
@@ -116,3 +66,49 @@ class InvoiceItem(models.Model):
 
     def __str__(self):
         return f"{self.product_name} x {self.quantity}"
+
+
+class Invoice(models.Model):
+
+    class Status(models.TextChoices):
+        QUOTE = "quote", "Quote"
+        INVOICE = "invoice", "Invoice"
+        PAID = "paid", "Paid"
+        CANCELLED = "cancelled", "Cancelled"
+
+    invoice_number = models.CharField(max_length=50, unique=True)
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.PROTECT,
+        related_name="invoices",
+    )
+    invoice_date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
+    salesperson = models.CharField(max_length=120, blank=True)
+    job = models.CharField(max_length=120, blank=True)
+    payment_terms = models.CharField(max_length=120, blank=True)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=4, default=0.15)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    tax = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.QUOTE,
+    )
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_invoices",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.invoice_number} - {self.customer.name}"
+
