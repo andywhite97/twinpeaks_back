@@ -28,7 +28,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         "customer__name",
         "customer__email",
     )
-    readonly_fields = ("subtotal", "tax", "total", "created_at", "updated_at")
+    readonly_fields = ("subtotal", "tax", "total", "items", "created_at", "updated_at")
     list_editable = ("status",)
 
 
