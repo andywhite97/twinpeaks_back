@@ -1,25 +1,35 @@
 from rest_framework import serializers
 
-from .models import Invoice
+from products.models import Product
+
+from .models import Customer, Invoice, InvoiceItem
 
 
 class InvoiceCustomerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
     location = serializers.CharField(max_length=200, required=False, allow_blank=True)
-    email = serializers.EmailField(required=False, allow_blank=True)
+    email = serializers.EmailField()
     phone = serializers.CharField(max_length=40, required=False, allow_blank=True)
+
+    def validate_email(self, value):
+        return value.strip().lower()
 
 
 class InvoiceItemSerializer(serializers.Serializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.filter(is_active=True)
+    )
     quantity = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0)
-    description = serializers.CharField(max_length=300)
-    unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0)
+
+    def validate_product(self, value):
+        if value.price is None:
+            raise serializers.ValidationError("This product does not have a price.")
+        return value
 
 
 class InvoiceGenerateSerializer(serializers.Serializer):
     customer = InvoiceCustomerSerializer()
     invoice_number = serializers.CharField(max_length=50)
-    customer_id = serializers.CharField(max_length=50, required=False, allow_blank=True)
     date = serializers.DateField(required=False)
     due_date = serializers.DateField(required=False)
     salesperson = serializers.CharField(max_length=120, required=False, allow_blank=True)
@@ -41,11 +51,23 @@ class InvoiceGenerateSerializer(serializers.Serializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+    customer = serializers.PrimaryKeyRelatedField(read_only=True)
+    customer_id = serializers.CharField(source="customer.customer_id", read_only=True)
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
+    customer_location = serializers.CharField(source="customer.location", read_only=True)
+    customer_email = serializers.EmailField(source="customer.email", read_only=True)
+    customer_phone = serializers.CharField(source="customer.phone", read_only=True)
+    line_items = serializers.SerializerMethodField()
+
+    def get_line_items(self, invoice):
+        return InvoiceLineItemSerializer(invoice.line_items.all(), many=True).data
+
     class Meta:
         model = Invoice
         fields = (
             "id",
             "invoice_number",
+            "customer",
             "customer_id",
             "customer_name",
             "customer_location",
@@ -61,8 +83,50 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "tax",
             "total",
             "items",
+            "line_items",
             "status",
             "generated_by",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = fields
+
+
+class InvoiceLineItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField(source="product.id", read_only=True)
+    product_slug = serializers.CharField(source="product.slug", read_only=True)
+
+    class Meta:
+        model = InvoiceItem
+        fields = (
+            "id",
+            "product_id",
+            "product_slug",
+            "product_name",
+            "product_description",
+            "quantity",
+            "unit_price",
+            "line_total",
+            "created_at",
+        )
+        read_only_fields = fields
+
+
+class InvoiceStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = ("status",)
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = (
+            "email",
+            "customer_id",
+            "name",
+            "location",
+            "phone",
             "created_at",
             "updated_at",
         )
