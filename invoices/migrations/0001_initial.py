@@ -10,31 +10,20 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("products", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="Customer",
-            fields=[
-                ("email", models.EmailField(max_length=254, primary_key=True, serialize=False)),
-                ("customer_id", models.CharField(editable=False, max_length=20, unique=True)),
-                ("name", models.CharField(max_length=120)),
-                ("location", models.CharField(blank=True, max_length=200)),
-                ("phone", models.CharField(blank=True, max_length=40)),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
-            ],
-            options={
-                "ordering": ["name", "email"],
-            },
-        ),
-        migrations.CreateModel(
             name="Invoice",
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 ("invoice_number", models.CharField(max_length=50, unique=True)),
+                ("customer_id", models.CharField(blank=True, max_length=50)),
+                ("customer_name", models.CharField(max_length=120)),
+                ("customer_location", models.CharField(blank=True, max_length=200)),
+                ("customer_email", models.EmailField(blank=True, max_length=254)),
+                ("customer_phone", models.CharField(blank=True, max_length=40)),
                 ("invoice_date", models.DateField()),
                 ("due_date", models.DateField(blank=True, null=True)),
                 ("salesperson", models.CharField(blank=True, max_length=120)),
@@ -49,25 +38,17 @@ class Migration(migrations.Migration):
                     "status",
                     models.CharField(
                         choices=[
-                            ("quote", "Quote"),
-                            ("invoice", "Invoice"),
+                            ("draft", "Draft"),
+                            ("sent", "Sent"),
                             ("paid", "Paid"),
                             ("cancelled", "Cancelled"),
                         ],
-                        default="quote",
+                        default="draft",
                         max_length=20,
                     ),
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
-                (
-                    "customer",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="invoices",
-                        to="invoices.customer",
-                    ),
-                ),
                 (
                     "generated_by",
                     models.ForeignKey(
@@ -81,37 +62,6 @@ class Migration(migrations.Migration):
             ],
             options={
                 "ordering": ["-created_at"],
-            },
-        ),
-        migrations.CreateModel(
-            name="InvoiceItem",
-            fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("product_name", models.CharField(max_length=150)),
-                ("product_description", models.TextField(blank=True)),
-                ("quantity", models.DecimalField(decimal_places=2, max_digits=10)),
-                ("unit_price", models.DecimalField(decimal_places=2, max_digits=12)),
-                ("line_total", models.DecimalField(decimal_places=2, max_digits=12)),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
-                (
-                    "invoice",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="line_items",
-                        to="invoices.invoice",
-                    ),
-                ),
-                (
-                    "product",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT,
-                        related_name="invoice_items",
-                        to="products.product",
-                    ),
-                ),
-            ],
-            options={
-                "ordering": ["id"],
             },
         ),
     ]
