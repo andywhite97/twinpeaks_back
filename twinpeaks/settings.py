@@ -209,6 +209,9 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ] if (BASE_DIR / 'static').exists() else []
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # WhiteNoise storage for efficient static file serving
 # Use Cloudinary for media files if configured, otherwise use local storage
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
@@ -231,7 +234,6 @@ if os.getenv('CLOUDINARY_CLOUD_NAME'):
         },
     }
     
-    MEDIA_URL = "/media/"
 else:
     STORAGES = {
         'default': {
@@ -242,9 +244,6 @@ else:
         },
     }
     
-    MEDIA_URL = "/media/"
-    MEDIA_ROOT = BASE_DIR / "media"
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

@@ -1,13 +1,18 @@
+from django.core.mail import EmailMessage
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAdminUser
+from django.conf import settings
+from pathlib import Path
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .generator import (
+    build_invoice_pdf,
     build_invoice_workbook,
     calculate_invoice_totals,
+    convert_workbook_to_pdf,
     normalize_invoice_date,
 )
 from .models import Customer, Invoice, InvoiceItem
@@ -40,18 +45,17 @@ class InvoiceListView(ListAPIView):
 class InvoiceDetailView(RetrieveAPIView):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
 
 
 class InvoiceGenerateView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = InvoiceGenerateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
-        invoice_number = data["invoice_number"]
         customer_data = data["customer"]
         customer, _created = Customer.objects.update_or_create(
             email=customer_data["email"],
@@ -61,7 +65,7 @@ class InvoiceGenerateView(APIView):
                 "phone": customer_data.get("phone", ""),
             },
         )
-        workbook_data = {
+        invoice_data = {
             **data,
             "customer": {
                 "name": customer.name,
@@ -79,12 +83,11 @@ class InvoiceGenerateView(APIView):
                 for item in data["items"]
             ],
         }
-        workbook = build_invoice_workbook(workbook_data)
-        subtotal, tax, total = calculate_invoice_totals(workbook_data)
+        subtotal, tax, total = calculate_invoice_totals(invoice_data)
+        invoice_date = normalize_invoice_date(data)
         invoice = Invoice.objects.create(
-            invoice_number=invoice_number,
             customer=customer,
-            invoice_date=normalize_invoice_date(data),
+            invoice_date=invoice_date,
             due_date=data.get("due_date"),
             salesperson=data.get("salesperson", ""),
             job=data.get("job", ""),
@@ -95,6 +98,9 @@ class InvoiceGenerateView(APIView):
             total=total,
             generated_by=request.user if request.user.is_authenticated else None,
         )
+        invoice_number = invoice.invoice_number
+        invoice_data["date"] = invoice_date
+        invoice_data["invoice_number"] = invoice_number
         invoice_items = InvoiceItem.objects.bulk_create(
             [
                 InvoiceItem(
@@ -109,14 +115,71 @@ class InvoiceGenerateView(APIView):
             ]
         )
         invoice.items.add(*invoice_items)
-        filename = f"invoice-{invoice_number}.xlsx"
+        workbook = build_invoice_workbook(invoice_data)
+        workbook_filename = f"{invoice_number}.xlsx"
+        workbook_bytes = workbook.getvalue()
+        invoice.invoice_workbook = self._save_invoice_file(
+            "workbooks",
+            workbook_filename,
+            workbook_bytes,
+        )
 
-        return FileResponse(
-            workbook,
+        pdf = convert_workbook_to_pdf(workbook, workbook_filename)
+        pdf_source = "invoice_design.xlsx"
+        if pdf is None:
+            pdf = build_invoice_pdf(invoice_data)
+            pdf_source = "fallback-pdf"
+
+        pdf_bytes = pdf.getvalue()
+        filename = f"{invoice_number}.pdf"
+        invoice.invoice_pdf = self._save_invoice_file("pdfs", filename, pdf_bytes)
+        invoice.save(update_fields=["invoice_pdf", "invoice_workbook"])
+        self._email_invoice_pdf(invoice, filename, pdf_bytes)
+
+        response = FileResponse(
+            pdf,
             as_attachment=True,
             filename=filename,
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            content_type="application/pdf",
         )
+        response["X-Invoice-Pdf-Path"] = self._invoice_pdf_absolute_path(
+            invoice.invoice_pdf
+        )
+        response["X-Invoice-Pdf-Url"] = request.build_absolute_uri(
+            f"{settings.MEDIA_URL}{invoice.invoice_pdf}"
+        )
+        response["X-Invoice-Workbook-Path"] = self._invoice_pdf_absolute_path(
+            invoice.invoice_workbook
+        )
+        response["X-Invoice-Template-Source"] = pdf_source
+        return response
+
+    def _save_invoice_file(self, folder, filename, file_bytes):
+        relative_path = Path("invoices") / folder / filename
+        absolute_path = Path(self._invoice_pdf_absolute_path(relative_path))
+        absolute_path.parent.mkdir(parents=True, exist_ok=True)
+        absolute_path.write_bytes(file_bytes)
+        return relative_path.as_posix()
+
+    def _invoice_pdf_absolute_path(self, relative_path):
+        return str(Path(settings.MEDIA_ROOT) / relative_path)
+
+    def _email_invoice_pdf(self, invoice, filename, pdf_bytes):
+        subject = f"Your invoice {invoice.invoice_number}"
+        message = (
+            f"Dear {invoice.customer.name},\n\n"
+            "Please find your invoice attached.\n\n"
+            "Kind regards,\n"
+            "TwinPeaks Investments"
+        )
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[invoice.customer.email],
+        )
+        email.attach(filename, pdf_bytes, "application/pdf")
+        email.send(fail_silently=False)
 
 
 class InvoiceStatusUpdateView(APIView):

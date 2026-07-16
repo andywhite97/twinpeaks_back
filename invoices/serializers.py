@@ -29,7 +29,6 @@ class InvoiceItemSerializer(serializers.Serializer):
 
 class InvoiceGenerateSerializer(serializers.Serializer):
     customer = InvoiceCustomerSerializer()
-    invoice_number = serializers.CharField(max_length=50)
     date = serializers.DateField(required=False)
     due_date = serializers.DateField(required=False)
     salesperson = serializers.CharField(max_length=120, required=False, allow_blank=True)
@@ -43,11 +42,6 @@ class InvoiceGenerateSerializer(serializers.Serializer):
         default="0.15",
     )
     items = InvoiceItemSerializer(many=True, min_length=1, max_length=10)
-
-    def validate_invoice_number(self, value):
-        if Invoice.objects.filter(invoice_number=value).exists():
-            raise serializers.ValidationError("An invoice with this number already exists.")
-        return value
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -86,6 +80,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
             "subtotal",
             "tax",
             "total",
+            "invoice_pdf",
+            "invoice_workbook",
             "items",
             "line_items",
             "status",
