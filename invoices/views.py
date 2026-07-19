@@ -207,7 +207,16 @@ class InvoiceGenerateView(APIView):
             else str(relative_path)
         )
         if hasattr(default_storage, "path"):
-            return default_storage.path(relative_path_str)
+            try:
+                return default_storage.path(relative_path_str)
+            except NotImplementedError:
+                pass
+
+        if hasattr(default_storage, "url"):
+            url = default_storage.url(relative_path_str)
+            if url.startswith("http://") or url.startswith("https://"):
+                return url
+
         return str(Path(settings.MEDIA_ROOT) / relative_path_str)
 
     def _invoice_file_url(self, relative_path, request):
