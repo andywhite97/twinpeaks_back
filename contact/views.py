@@ -4,7 +4,8 @@ from rest_framework.throttling import AnonRateThrottle
 from django.conf import settings
 from .models import ContactMessage
 from .serializers import ContactMessageSerializer
-from .tasks import send_contact_message_notification
+
+from bird import APIError, Bird
 
 
 class ContactMessageCreateView(CreateAPIView):
@@ -16,10 +17,18 @@ class ContactMessageCreateView(CreateAPIView):
     def perform_create(self, serializer):
         message = serializer.save()
 
-        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
-            send_contact_message_notification.apply(args=(message.id,))
-        else:
-            send_contact_message_notification.delay(message.id)
+        msg = ContactMessage.objects.get(pk=message.id)
+        with Bird(api_key=settings.BIRD_API_KEY) as client:
+            try:
+                message = client.email.send(
+                    from_={"email": "onboarding@messagebird.dev", "name": "Bird"},
+                    to=["delivered@messagebird.dev", "andileblessinghlophe@gmail.com"],
+                    subject=f"New Contact Message from {msg.name}",
+                    html=f"<p>{msg.message}</p>",
+                )
+                print(message.id, message.status)
+            except APIError as err:
+                print("send failed:", err)
 
 
 class ContactMessageListView(ListAPIView):
