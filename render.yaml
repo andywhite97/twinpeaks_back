@@ -24,6 +24,8 @@ services:
         value: your-email@gmail.com
       - key: EMAIL_HOST_PASSWORD
         value: your-app-password
+      - key: BIRD_API_KEY
+        value: your-messagebird-api-key
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SESSION_COOKIE_SECURE

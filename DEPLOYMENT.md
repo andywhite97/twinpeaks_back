@@ -23,6 +23,7 @@
 # Update these with actual values:
 EMAIL_HOST_USER=your-actual-email@gmail.com
 EMAIL_HOST_PASSWORD=your-gmail-app-password
+BIRD_API_KEY=your-messagebird-api-key
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,twinpeaks-api.render.com
 ```
 
@@ -57,6 +58,7 @@ After deployment, go to your web service and add secret variables:
 - `DJANGO_SECRET_KEY` - Copy from `.env`
 - `EMAIL_HOST_USER` - Your Gmail
 - `EMAIL_HOST_PASSWORD` - Gmail app password
+- `BIRD_API_KEY` - Your MessageBird API key
 
 ### Step 4: Monitor Build
 - Check the build logs in Render dashboard

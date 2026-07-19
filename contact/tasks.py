@@ -11,7 +11,7 @@ from bird import APIError, Bird
 @shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 30})
 def send_contact_message_notification(self, message_id):
     msg = ContactMessage.objects.get(pk=message_id)
-    with Bird() as client:
+    with Bird(api_key=settings.BIRD_API_KEY) as client:
         try:
             message = client.email.send(
                 from_={"email": "onboarding@messagebird.dev", "name": "Bird"},
