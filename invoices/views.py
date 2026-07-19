@@ -147,10 +147,7 @@ class InvoiceGenerateView(APIView):
                     saved_paths,
                 )
                 invoice.save(update_fields=["invoice_pdf", "invoice_workbook"])
-                if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
-                    send_invoice_email.apply(args=(invoice.id, filename))
-                else:
-                    send_invoice_email.delay(invoice.id, filename)
+                send_invoice_email.apply(args=(invoice.id, filename))
         except Exception:
             for path in saved_paths:
                 try:
