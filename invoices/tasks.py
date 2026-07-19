@@ -2,6 +2,7 @@ from celery import shared_task
 from django.core.files.storage import default_storage
 from django.core.mail import EmailMessage
 from django.conf import settings
+from bird import APIError, Bird
 
 from .models import Invoice
 
@@ -16,17 +17,26 @@ def send_invoice_email(self, invoice_id, filename):
         pdf_bytes = pdf_file.read()
 
     subject = f"Your invoice {invoice.invoice_number}"
-    message = (
+    msg = (
         f"Dear {invoice.customer.name},\n\n"
         "Please find your invoice attached.\n\n"
         "Kind regards,\n"
         "TwinPeaks Investments"
     )
-    email = EmailMessage(
-        subject=subject,
-        body=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[invoice.customer.email],
-    )
-    email.attach(filename, pdf_bytes, "application/pdf")
-    email.send(fail_silently=False)
+    with Bird() as client:
+        try:
+            message = client.email.send(
+                from_={"email": "info@twinpeaksinvestment.com", "name": "TwinPeaks Investments"},
+                to=[invoice.customer.email],
+                subject=f"Your invoice {invoice.invoice_number}",
+                html=f"<p>{msg}</p>",
+                attachments= [
+                    {
+                    "filename": "Invoice.pdf",
+                    "content": filename,
+                    }
+                ]
+            )
+            print(message.id, message.status)
+        except APIError as err:
+            print("send failed:", err)
