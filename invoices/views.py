@@ -153,7 +153,7 @@ class InvoiceGenerateView(APIView):
                     saved_paths,
                 )
                 invoice.save(update_fields=["invoice_pdf", "invoice_workbook"])
-                send_invoice_email(invoice.id, pdf)
+                send_invoice_email(invoice.id)
         except Exception:
             for path in saved_paths:
                 try:

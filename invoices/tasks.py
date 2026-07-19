@@ -4,7 +4,7 @@ from bird import APIError, Bird
 
 from .models import Invoice
 
-def send_invoice_email(self, invoice_id, filename):
+def send_invoice_email(invoice_id):
     invoice = Invoice.objects.select_related('customer').get(pk=invoice_id)
     if not invoice.invoice_pdf:
         raise ValueError('Invoice PDF path is missing for invoice id %s' % invoice_id)
@@ -28,7 +28,7 @@ def send_invoice_email(self, invoice_id, filename):
                 attachments= [
                     {
                     "filename": "Invoice.pdf",
-                    "content": filename,
+                    "content": pdf_bytes,
                     }
                 ]
             )
