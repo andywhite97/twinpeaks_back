@@ -18,7 +18,7 @@ class ContactMessageCreateView(CreateAPIView):
         message = serializer.save()
 
         msg = ContactMessage.objects.get(pk=message.id)
-        with Bird(api_key=settings.BIRD_API_KEY) as client:
+        with Bird() as client:
             try:
                 message = client.email.send(
                     from_={"email": "onboarding@messagebird.dev", "name": "Bird"},
