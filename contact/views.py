@@ -21,8 +21,8 @@ class ContactMessageCreateView(CreateAPIView):
         with Bird() as client:
             try:
                 message = client.email.send(
-                    from_={"email": "onboarding@messagebird.dev", "name": "Bird"},
-                    to=["delivered@messagebird.dev", "andileblessinghlophe@gmail.com"],
+                    from_={"email": "info@twinpeaksinvestment.com", "name": "TwinPeaks Investments"},
+                    to=["andileblessinghlophe@gmail.com"],
                     subject=f"New Contact Message from {msg.name}",
                     html=f"<p>{msg.message}</p>",
                 )
