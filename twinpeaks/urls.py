@@ -20,7 +20,7 @@ from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshVie
 from django.conf import settings
 from django.conf.urls.static import static
 
-admin.site.site_header = "TwinPeaks Investment Admin"
+admin.site.site_header = "TwinPeaks Investment"
 admin.site.site_title = "TwinPeaks Admin"
 admin.site.index_title = "Management Dashboard"
 

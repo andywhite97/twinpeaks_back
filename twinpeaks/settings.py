@@ -231,6 +231,9 @@ CELERY_TASK_DEFAULT_QUEUE = os.getenv("CELERY_TASK_DEFAULT_QUEUE", "default")
 CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT", "600"))
 CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "300"))
 
+
+BIRD_API_KEY = os.getenv("BIRD_API_KEY", "")
+
 # WhiteNoise storage for efficient static file serving
 # Use Cloudinary for media files if configured, otherwise use local storage
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
