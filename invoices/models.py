@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.db import models
+from django.db import IntegrityError, models
 from django.db.models import Sum
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
@@ -107,13 +107,25 @@ class Invoice(models.Model):
             and previous_status != self.status
             and self.status in self.NUMBER_PREFIXES
         )
+
         if should_generate_number:
-            self.invoice_number = self._generate_invoice_number()
             update_fields = kwargs.get("update_fields")
             if update_fields is not None:
                 kwargs["update_fields"] = set(update_fields) | {"invoice_number"}
 
-        super().save(*args, **kwargs)
+            attempts = 0
+            while True:
+                self.invoice_number = self._generate_invoice_number()
+                try:
+                    super().save(*args, **kwargs)
+                    break
+                except IntegrityError:
+                    attempts += 1
+                    if attempts > 5:
+                        raise
+                    continue
+        else:
+            super().save(*args, **kwargs)
 
     def _generate_invoice_number(self):
         prefix = self.NUMBER_PREFIXES.get(self.status, "INV")
@@ -184,7 +196,7 @@ class InvoiceItem(models.Model):
                 self.product_name = self.product.name
             if not self.product_description:
                 self.product_description = self.product.description or ""
-            if not self.unit_price:
+            if self.unit_price is None:
                 self.unit_price = self.product.price
         
         # Calculate line total

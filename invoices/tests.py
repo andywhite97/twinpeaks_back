@@ -11,6 +11,7 @@ from products.models import Product
 from .models import Customer, Invoice, InvoiceItem
 
 
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class InvoiceGenerateViewTests(TestCase):
     def setUp(self):
         self.media_root = TemporaryDirectory()
@@ -208,6 +209,30 @@ class InvoiceGenerateViewTests(TestCase):
         self.assertEqual(line_item.unit_price, 100)
         self.assertEqual(line_item.line_total, 100)
         self.assertEqual(invoice.subtotal, 100)
+
+    def test_invoice_item_can_have_zero_price_without_overwrite(self):
+        invoice = Invoice.objects.create(
+            customer=Customer.objects.create(
+                email="accounts@example.com",
+                name="Acme Projects",
+            ),
+            invoice_date="2026-06-03",
+            generated_by=self.admin,
+        )
+
+        InvoiceItem.objects.create(
+            product=self.assessment,
+            quantity="1",
+            unit_price="0.00",
+            line_total="0.00",
+        )
+        invoice.items.add(InvoiceItem.objects.get(product=self.assessment))
+        invoice.refresh_from_db()
+
+        item = invoice.items.get(product=self.assessment)
+        self.assertEqual(item.unit_price, 0)
+        self.assertEqual(item.line_total, 0)
+        self.assertEqual(invoice.subtotal, 0)
 
     def test_can_mark_invoice_as_paid_with_receipt_number(self):
         customer = Customer.objects.create(

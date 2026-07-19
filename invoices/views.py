@@ -1,4 +1,6 @@
-from django.core.mail import EmailMessage
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db import transaction
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.conf import settings
@@ -7,6 +9,8 @@ from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from .tasks import send_invoice_email
 
 from .generator import (
     build_invoice_pdf,
@@ -101,40 +105,59 @@ class InvoiceGenerateView(APIView):
         invoice_number = invoice.invoice_number
         invoice_data["date"] = invoice_date
         invoice_data["invoice_number"] = invoice_number
-        invoice_items = InvoiceItem.objects.bulk_create(
-            [
-                InvoiceItem(
-                    product=item["product"],
-                    product_name=item["product"].name,
-                    product_description=item["product"].description,
-                    quantity=item["quantity"],
-                    unit_price=item["product"].price,
-                    line_total=item["quantity"] * item["product"].price,
+        saved_paths = []
+        try:
+            with transaction.atomic():
+                invoice_items = InvoiceItem.objects.bulk_create(
+                    [
+                        InvoiceItem(
+                            product=item["product"],
+                            product_name=item["product"].name,
+                            product_description=item["product"].description,
+                            quantity=item["quantity"],
+                            unit_price=item["product"].price,
+                            line_total=item["quantity"] * item["product"].price,
+                        )
+                        for item in data["items"]
+                    ]
                 )
-                for item in data["items"]
-            ]
-        )
-        invoice.items.add(*invoice_items)
-        workbook = build_invoice_workbook(invoice_data)
-        workbook_filename = f"{invoice_number}.xlsx"
-        workbook_bytes = workbook.getvalue()
-        invoice.invoice_workbook = self._save_invoice_file(
-            "workbooks",
-            workbook_filename,
-            workbook_bytes,
-        )
+                invoice.items.add(*invoice_items)
+                workbook = build_invoice_workbook(invoice_data)
+                workbook_filename = f"{invoice_number}.xlsx"
+                workbook_bytes = workbook.getvalue()
+                invoice.invoice_workbook = self._save_invoice_file(
+                    "workbooks",
+                    workbook_filename,
+                    workbook_bytes,
+                    saved_paths,
+                )
 
-        pdf = convert_workbook_to_pdf(workbook, workbook_filename)
-        pdf_source = "invoice_design.xlsx"
-        if pdf is None:
-            pdf = build_invoice_pdf(invoice_data)
-            pdf_source = "fallback-pdf"
+                pdf = convert_workbook_to_pdf(workbook, workbook_filename)
+                pdf_source = "invoice_design.xlsx"
+                if pdf is None:
+                    pdf = build_invoice_pdf(invoice_data)
+                    pdf_source = "fallback-pdf"
 
-        pdf_bytes = pdf.getvalue()
-        filename = f"{invoice_number}.pdf"
-        invoice.invoice_pdf = self._save_invoice_file("pdfs", filename, pdf_bytes)
-        invoice.save(update_fields=["invoice_pdf", "invoice_workbook"])
-        self._email_invoice_pdf(invoice, filename, pdf_bytes)
+                pdf_bytes = pdf.getvalue()
+                filename = f"{invoice_number}.pdf"
+                invoice.invoice_pdf = self._save_invoice_file(
+                    "pdfs",
+                    filename,
+                    pdf_bytes,
+                    saved_paths,
+                )
+                invoice.save(update_fields=["invoice_pdf", "invoice_workbook"])
+                if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+                    send_invoice_email.apply(args=(invoice.id, filename))
+                else:
+                    send_invoice_email.delay(invoice.id, filename)
+        except Exception:
+            for path in saved_paths:
+                try:
+                    default_storage.delete(path)
+                except Exception:
+                    pass
+            raise
 
         response = FileResponse(
             pdf,
@@ -142,44 +165,51 @@ class InvoiceGenerateView(APIView):
             filename=filename,
             content_type="application/pdf",
         )
-        response["X-Invoice-Pdf-Path"] = self._invoice_pdf_absolute_path(
+        response["X-Invoice-Pdf-Path"] = self._invoice_file_absolute_path(
             invoice.invoice_pdf
         )
-        response["X-Invoice-Pdf-Url"] = request.build_absolute_uri(
-            f"{settings.MEDIA_URL}{invoice.invoice_pdf}"
+        response["X-Invoice-Pdf-Url"] = self._invoice_file_url(
+            invoice.invoice_pdf,
+            request,
         )
-        response["X-Invoice-Workbook-Path"] = self._invoice_pdf_absolute_path(
+        response["X-Invoice-Workbook-Path"] = self._invoice_file_absolute_path(
             invoice.invoice_workbook
         )
         response["X-Invoice-Template-Source"] = pdf_source
         return response
 
-    def _save_invoice_file(self, folder, filename, file_bytes):
+    def _save_invoice_file(self, folder, filename, file_bytes, saved_paths=None):
         relative_path = Path("invoices") / folder / filename
-        absolute_path = Path(self._invoice_pdf_absolute_path(relative_path))
-        absolute_path.parent.mkdir(parents=True, exist_ok=True)
-        absolute_path.write_bytes(file_bytes)
-        return relative_path.as_posix()
+        relative_path_str = relative_path.as_posix()
+        if default_storage.exists(relative_path_str):
+            default_storage.delete(relative_path_str)
+        default_storage.save(relative_path_str, ContentFile(file_bytes))
+        if saved_paths is not None:
+            saved_paths.append(relative_path_str)
+        return relative_path_str
 
-    def _invoice_pdf_absolute_path(self, relative_path):
-        return str(Path(settings.MEDIA_ROOT) / relative_path)
+    def _invoice_file_absolute_path(self, relative_path):
+        relative_path_str = (
+            relative_path.as_posix()
+            if isinstance(relative_path, Path)
+            else str(relative_path)
+        )
+        if hasattr(default_storage, "path"):
+            return default_storage.path(relative_path_str)
+        return str(Path(settings.MEDIA_ROOT) / relative_path_str)
 
-    def _email_invoice_pdf(self, invoice, filename, pdf_bytes):
-        subject = f"Your invoice {invoice.invoice_number}"
-        message = (
-            f"Dear {invoice.customer.name},\n\n"
-            "Please find your invoice attached.\n\n"
-            "Kind regards,\n"
-            "TwinPeaks Investments"
+    def _invoice_file_url(self, relative_path, request):
+        relative_path_str = (
+            relative_path.as_posix()
+            if isinstance(relative_path, Path)
+            else str(relative_path)
         )
-        email = EmailMessage(
-            subject=subject,
-            body=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[invoice.customer.email],
-        )
-        email.attach(filename, pdf_bytes, "application/pdf")
-        email.send(fail_silently=False)
+        if hasattr(default_storage, "url"):
+            url = default_storage.url(relative_path_str)
+            if url.startswith("http://") or url.startswith("https://"):
+                return url
+            return request.build_absolute_uri(url)
+        return request.build_absolute_uri(f"{settings.MEDIA_URL}{relative_path_str}")
 
 
 class InvoiceStatusUpdateView(APIView):

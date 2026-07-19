@@ -69,6 +69,18 @@ Once deployed:
 curl https://twinpeaks-api.render.com/api/auth/login/
 ```
 
+### Step 6: Start Celery Worker
+If your deployment uses Celery for email and background jobs, add a worker service and set the broker URL.
+- `CELERY_BROKER_URL=redis://<user>:<password>@<host>:<port>/<db>`
+- `CELERY_TASK_ALWAYS_EAGER=False`
+
+Render worker command example:
+```bash
+celery -A twinpeaks worker --loglevel=info
+```
+
+If your broker is Redis, also add it as a Render service or use a managed Redis provider.
+
 ## Deployment URLs
 
 - **Backend API:** `https://twinpeaks-api.render.com`

@@ -1,10 +1,10 @@
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.throttling import AnonRateThrottle
+from django.conf import settings
 from .models import ContactMessage
 from .serializers import ContactMessageSerializer
-from django.core.mail import send_mail
-from django.conf import settings
+from .tasks import send_contact_message_notification
 
 
 class ContactMessageCreateView(CreateAPIView):
@@ -15,16 +15,11 @@ class ContactMessageCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         message = serializer.save()
-        name = message.name
-        msg = message.message
 
-        send_mail(
-            subject=f"New Contact Message from {name}",
-            message=msg,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=['andileblessinghlophe@gmail.com'],
-            fail_silently=False,
-        )
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            send_contact_message_notification.apply(args=(message.id,))
+        else:
+            send_contact_message_notification.delay(message.id)
 
 
 class ContactMessageListView(ListAPIView):
