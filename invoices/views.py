@@ -5,6 +5,12 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from pathlib import Path
+
+try:
+    from cloudinary_storage.storage import RawMediaCloudinaryStorage, MediaCloudinaryStorage
+except ImportError:
+    RawMediaCloudinaryStorage = None
+    MediaCloudinaryStorage = None
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -180,7 +186,16 @@ class InvoiceGenerateView(APIView):
         relative_path_str = relative_path.as_posix()
         if default_storage.exists(relative_path_str):
             default_storage.delete(relative_path_str)
-        default_storage.save(relative_path_str, ContentFile(file_bytes))
+
+        content_file = ContentFile(file_bytes)
+
+        if RawMediaCloudinaryStorage and MediaCloudinaryStorage and isinstance(default_storage, MediaCloudinaryStorage):
+            # When using Cloudinary media storage, force raw uploads for invoices.
+            raw_storage = RawMediaCloudinaryStorage()
+            raw_storage.save(relative_path_str, content_file)
+        else:
+            default_storage.save(relative_path_str, content_file)
+
         if saved_paths is not None:
             saved_paths.append(relative_path_str)
         return relative_path_str
