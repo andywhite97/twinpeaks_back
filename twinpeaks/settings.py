@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'contact',
     'products',
     'gallery',
+    'homepage',
     'invoices',
 ]
 
