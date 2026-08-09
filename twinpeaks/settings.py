@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     'products',
     'gallery',
     'homepage',
-    'invoices',
 ]
 
 AUTH_USER_MODEL = "users.User"

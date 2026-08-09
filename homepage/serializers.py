@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Brand, HeroSlide, HomepageSettings, Project, Solution, Statistic, Testimonial
+from .models import Brand, HeroSlide, HomepageSettings, Project, ProjectImage, Solution, Statistic, Testimonial
 
 
 class HomepageSettingsSerializer(serializers.ModelSerializer):
@@ -16,6 +16,13 @@ class HomepageSettingsSerializer(serializers.ModelSerializer):
             "hero_secondary_cta_text",
             "hero_secondary_cta_url",
             "trust_badges",
+            "cta_heading",
+            "cta_subheading",
+            "cta_background_image",
+            "cta_primary_button_text",
+            "cta_primary_button_url",
+            "cta_secondary_button_text",
+            "cta_secondary_button_url",
         )
 
     def get_trust_badges(self, obj):
@@ -40,7 +47,15 @@ class StatisticSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ProjectImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectImage
+        fields = ("id", "image", "caption", "display_order")
+
+
 class ProjectSerializer(serializers.ModelSerializer):
+    images = ProjectImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Project
         fields = "__all__"

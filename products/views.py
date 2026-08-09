@@ -1,8 +1,8 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
-from .models import Product
-from .serializers import ProductSerializer
+from .models import Product, ProductCategory
+from .serializers import ProductCategorySerializer, ProductSerializer
 
 
 class ProductPagination(PageNumberPagination):
@@ -12,14 +12,32 @@ class ProductPagination(PageNumberPagination):
 
 
 class ProductListView(ListAPIView):
-    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
     pagination_class = ProductPagination
 
+    def get_queryset(self):
+        queryset = Product.objects.filter(is_active=True).select_related("category")
+        if self.request.query_params.get("featured") == "true":
+            queryset = queryset.filter(is_featured=True)
+        if category_slug := self.request.query_params.get("category"):
+            queryset = queryset.filter(category__slug=category_slug)
+        return queryset
+
 
 class ProductDetailView(RetrieveAPIView):
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).select_related("category")
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"
+
+
+class ProductCategoryListView(ListAPIView):
+    serializer_class = ProductCategorySerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = ProductCategory.objects.filter(is_active=True)
+        if self.request.query_params.get("featured") == "true":
+            queryset = queryset.filter(is_featured=True)
+        return queryset

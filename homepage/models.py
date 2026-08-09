@@ -21,6 +21,13 @@ class HomepageSettings(TimeStampedModel):
     hero_secondary_cta_text = models.CharField(max_length=80, default="Explore services")
     hero_secondary_cta_url = models.CharField(max_length=255, default="/services")
     trust_badges = models.TextField(blank=True, help_text="One badge per line")
+    cta_heading = models.CharField(max_length=200, default="Excited to start your next project?")
+    cta_subheading = models.TextField(blank=True)
+    cta_background_image = models.ImageField(upload_to="homepage/cta/", blank=True, null=True)
+    cta_primary_button_text = models.CharField(max_length=80, default="Request a quote")
+    cta_primary_button_url = models.CharField(max_length=255, default="/contact")
+    cta_secondary_button_text = models.CharField(max_length=80, blank=True)
+    cta_secondary_button_url = models.CharField(max_length=255, blank=True)
 
     class Meta:
         verbose_name = "Homepage Settings"
@@ -73,6 +80,7 @@ class Project(TimeStampedModel):
     title = models.CharField(max_length=150)
     slug = models.SlugField(unique=True, blank=True)
     short_description = models.TextField(blank=True)
+    long_description = models.TextField(blank=True)
     location = models.CharField(max_length=120, blank=True)
     category = models.CharField(max_length=100, blank=True)
     image = models.ImageField(upload_to="homepage/projects/")
@@ -90,6 +98,19 @@ class Project(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+
+class ProjectImage(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="homepage/projects/")
+    caption = models.CharField(max_length=150, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+
+    def __str__(self):
+        return f"{self.project.title} image"
 
 
 class Brand(TimeStampedModel):

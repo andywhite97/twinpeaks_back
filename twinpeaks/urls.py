@@ -15,16 +15,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView,)
 from django.conf import settings
 from django.conf.urls.static import static
+from core.sitemaps import ProductSitemap, ProjectSitemap, StaticViewSitemap
 
 admin.site.site_header = "TwinPeaks Investment"
 admin.site.site_title = "TwinPeaks Admin"
 admin.site.index_title = "Management Dashboard"
 
 urlpatterns = [
+    path("sitemap.xml", sitemap, {"sitemaps": {"static": StaticViewSitemap, "products": ProductSitemap, "projects": ProjectSitemap}}, name="django.contrib.sitemaps.views.sitemap"),
     path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path('admin/', admin.site.urls),
@@ -35,7 +38,6 @@ urlpatterns = [
     path("api/", include("products.urls")),
     path("api/", include("gallery.urls")),
     path("api/", include("homepage.urls")),
-    path("api/", include("invoices.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

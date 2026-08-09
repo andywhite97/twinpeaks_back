@@ -1,8 +1,16 @@
 from rest_framework import serializers
-from .models import Product
+from .models import Product, ProductCategory
+
+
+class ProductCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductCategory
+        fields = ("id", "name", "slug", "image", "description", "is_featured", "display_order")
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category = ProductCategorySerializer(read_only=True)
+    stock_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -12,8 +20,18 @@ class ProductSerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "price",
+            "sale_price",
             "image",
+            "category",
+            "stock_quantity",
+            "stock_status",
+            "rating",
+            "installation_available",
+            "is_featured",
             "created_at",
         )
 
         read_only_fields = ("id", "created_at")
+
+    def get_stock_status(self, obj):
+        return "in_stock" if obj.stock_quantity > 0 else "out_of_stock"
