@@ -9,6 +9,7 @@ class Product(models.Model):
     sale_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ImageField(upload_to="products/", null=True, blank=True)
     category = models.ForeignKey("ProductCategory", on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
+    brand = models.ForeignKey("homepage.Brand", on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
     stock_quantity = models.PositiveIntegerField(default=0)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     installation_available = models.BooleanField(default=False)

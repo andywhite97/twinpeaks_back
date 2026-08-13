@@ -52,10 +52,11 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ("logo_preview", "name", "website", "is_featured", "is_active", "display_order")
+    list_display = ("logo_preview", "name", "slug", "is_featured", "is_active", "display_order")
     list_editable = ("is_featured", "is_active", "display_order")
     search_fields = ("name",)
     list_filter = ("is_featured", "is_active")
+    prepopulated_fields = {"slug": ("name",)}
 
     @admin.display(description="Logo")
     def logo_preview(self, obj):

@@ -5,8 +5,8 @@ from .models import Product, ProductCategory
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("image_preview", "name", "category", "price", "sale_price", "stock_quantity", "is_featured", "is_active", "created_at")
-    list_filter = ("is_active", "is_featured", "category", "created_at")
+    list_display = ("image_preview", "name", "brand", "category", "price", "sale_price", "stock_quantity", "is_featured", "is_active", "created_at")
+    list_filter = ("is_active", "is_featured", "brand", "category", "created_at")
     list_editable = ("is_featured", "is_active")
     search_fields = ("name", "description")
     prepopulated_fields = {"slug": ("name",)}

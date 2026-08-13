@@ -115,8 +115,8 @@ class ProjectImage(models.Model):
 
 class Brand(TimeStampedModel):
     name = models.CharField(max_length=120)
+    slug = models.SlugField(unique=True, blank=True)
     logo = models.ImageField(upload_to="homepage/brands/")
-    website = models.URLField(blank=True)
     is_featured = models.BooleanField(default=False)
 
     class Meta:
@@ -124,6 +124,11 @@ class Brand(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class Testimonial(TimeStampedModel):
