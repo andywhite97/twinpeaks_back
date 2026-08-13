@@ -24,6 +24,9 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ("is_featured", "is_active")
     search_fields = ("name", "description")
     prepopulated_fields = {"slug": ("name",)}
+    formfield_overrides = {
+        models.TextField: {"widget": MarkdownTextarea},
+    }
 
     @admin.display(description="Image")
     def image_preview(self, obj):
@@ -37,6 +40,3 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     list_filter = ("is_featured", "is_active")
     search_fields = ("name", "description")
     prepopulated_fields = {"slug": ("name",)}
-    formfield_overrides = {
-        models.TextField: {"widget": MarkdownTextarea},
-    }

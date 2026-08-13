@@ -1,8 +1,9 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
+from homepage.models import Brand
 from .models import Product, ProductCategory
-from .serializers import ProductCategorySerializer, ProductSerializer
+from .serializers import ProductBrandSerializer, ProductCategorySerializer, ProductSerializer
 
 
 class ProductPagination(PageNumberPagination):
@@ -24,7 +25,12 @@ class ProductListView(ListAPIView):
             queryset = queryset.filter(category__slug=category_slug)
         if brand_slug := self.request.query_params.get("brand"):
             queryset = queryset.filter(brand__slug=brand_slug)
-        return queryset
+        ordering = self.request.query_params.get("sort")
+        return {
+            "name": queryset.order_by("name"),
+            "price_asc": queryset.order_by("price", "name"),
+            "price_desc": queryset.order_by("-price", "name"),
+        }.get(ordering, queryset)
 
 
 class ProductDetailView(RetrieveAPIView):
@@ -43,3 +49,11 @@ class ProductCategoryListView(ListAPIView):
         if self.request.query_params.get("featured") == "true":
             queryset = queryset.filter(is_featured=True)
         return queryset
+
+
+class ProductBrandListView(ListAPIView):
+    serializer_class = ProductBrandSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Brand.objects.filter(is_active=True, products__is_active=True).distinct().order_by("name")
