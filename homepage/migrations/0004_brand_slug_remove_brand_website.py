@@ -17,10 +17,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql="DROP INDEX IF EXISTS homepage_brand_slug_ac37270a_like;",
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.AddField(
             model_name="brand",
             name="slug",
-            field=models.SlugField(blank=True, null=True),
+            field=models.SlugField(blank=True, db_index=False, null=True),
         ),
         migrations.RunPython(populate_brand_slugs, migrations.RunPython.noop),
         migrations.AlterField(
