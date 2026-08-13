@@ -1,6 +1,20 @@
+from django import forms
 from django.contrib import admin
+from django.db import models
 from django.utils.html import format_html
 from .models import Product, ProductCategory
+
+
+class MarkdownTextarea(forms.Textarea):
+    class Media:
+        css = {"all": ("products/markdown_editor.css",)}
+        js = ("products/markdown_editor.js",)
+
+    def __init__(self, *args, **kwargs):
+        attrs = kwargs.setdefault("attrs", {})
+        attrs["class"] = f"{attrs.get('class', '')} markdown-editor".strip()
+        attrs.setdefault("rows", 16)
+        super().__init__(*args, **kwargs)
 
 
 @admin.register(Product)
@@ -23,3 +37,6 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     list_filter = ("is_featured", "is_active")
     search_fields = ("name", "description")
     prepopulated_fields = {"slug": ("name",)}
+    formfield_overrides = {
+        models.TextField: {"widget": MarkdownTextarea},
+    }
