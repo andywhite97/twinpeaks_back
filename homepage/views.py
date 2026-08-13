@@ -31,7 +31,7 @@ class HomepageView(APIView):
                 many=True,
             ).data,
             "featured_products": ProductSerializer(
-                Product.objects.filter(is_active=True, is_featured=True).select_related("brand", "category")[:6],
+                Product.objects.filter(is_active=True, is_featured=True).select_related("brand", "category").prefetch_related("images")[:6],
                 many=True,
             ).data,
             "featured_categories": ProductCategorySerializer(

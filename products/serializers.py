@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from homepage.models import Brand
-from .models import Product, ProductCategory
+from .models import Product, ProductCategory, ProductImage
 
 
 class ProductCategorySerializer(serializers.ModelSerializer):
@@ -15,9 +15,16 @@ class ProductBrandSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "slug", "logo")
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ("id", "image", "alt_text", "display_order")
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category = ProductCategorySerializer(read_only=True)
     brand = ProductBrandSerializer(read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
     stock_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -30,6 +37,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "price",
             "sale_price",
             "image",
+            "images",
             "category",
             "brand",
             "stock_quantity",

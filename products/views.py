@@ -18,7 +18,7 @@ class ProductListView(ListAPIView):
     pagination_class = ProductPagination
 
     def get_queryset(self):
-        queryset = Product.objects.filter(is_active=True).select_related("brand", "category")
+        queryset = Product.objects.filter(is_active=True).select_related("brand", "category").prefetch_related("images")
         if self.request.query_params.get("featured") == "true":
             queryset = queryset.filter(is_featured=True)
         if category_slug := self.request.query_params.get("category"):
@@ -34,7 +34,7 @@ class ProductListView(ListAPIView):
 
 
 class ProductDetailView(RetrieveAPIView):
-    queryset = Product.objects.filter(is_active=True).select_related("brand", "category")
+    queryset = Product.objects.filter(is_active=True).select_related("brand", "category").prefetch_related("images")
     serializer_class = ProductSerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"

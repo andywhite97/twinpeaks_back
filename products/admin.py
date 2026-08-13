@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.db import models
 from django.utils.html import format_html
-from .models import Product, ProductCategory
+from .models import Product, ProductCategory, ProductImage
 
 
 class MarkdownTextarea(forms.Textarea):
@@ -17,6 +17,12 @@ class MarkdownTextarea(forms.Textarea):
         super().__init__(*args, **kwargs)
 
 
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ("image", "alt_text", "display_order")
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("image_preview", "name", "brand", "category", "price", "sale_price", "stock_quantity", "is_featured", "is_active", "created_at")
@@ -27,6 +33,7 @@ class ProductAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.TextField: {"widget": MarkdownTextarea},
     }
+    inlines = (ProductImageInline,)
 
     @admin.display(description="Image")
     def image_preview(self, obj):
