@@ -9,7 +9,7 @@ services:
       - key: PYTHON_VERSION
         value: "3.11"
       - key: DJANGO_SECRET_KEY
-        value: ln%%qn5z+^z@4owlm#o%pn=1&_z!*!kv10+rm2qn4$!z)bjy=4
+        generateValue: true
       - key: DJANGO_DEBUG
         value: "False"
       - key: DJANGO_ALLOWED_HOSTS
@@ -19,13 +19,15 @@ services:
           name: twinpeaks-sql
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://andywhite97.github.io/twinpeaks"
+        value: "https://twinpeaksinvestment.com"
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "False"
       - key: EMAIL_HOST_USER
-        value: your-email@gmail.com
+        sync: false
       - key: EMAIL_HOST_PASSWORD
-        value: your-app-password
+        sync: false
       - key: BIRD_API_KEY
-        value: your-messagebird-api-key
+        sync: false
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SESSION_COOKIE_SECURE

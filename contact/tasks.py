@@ -1,7 +1,7 @@
 from .models import ContactMessage
 from bird import APIError, Bird
 
-def send_contact_message_notification(self, message):
+def send_contact_message_notification(message):
     msg = ContactMessage.objects.get(pk=message.id)
     with Bird() as client:
         try:
