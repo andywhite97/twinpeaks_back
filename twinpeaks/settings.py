@@ -31,6 +31,7 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [host for host in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',') if host]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     'products',
     'gallery',
     'homepage',
+    'orders',
 ]
 
 AUTH_USER_MODEL = "users.User"
@@ -216,9 +218,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Public storefront base used by integrations that need canonical product links.
 # Keep this configurable for non-production deployments without coupling the
 # catalog feed to the Django API host.
-META_CATALOG_STOREFRONT_URL = os.getenv(
-    "META_CATALOG_STOREFRONT_URL", "https://twinpeaksinvestment.com"
-).rstrip("/")
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://twinpeaksinvestment.com").rstrip("/")
+META_CATALOG_STOREFRONT_URL = os.getenv("META_CATALOG_STOREFRONT_URL", PUBLIC_SITE_URL).rstrip("/")
 
 # Celery configuration
 # In production, set CELERY_BROKER_URL to a real broker such as Redis or RabbitMQ.
@@ -240,6 +241,16 @@ CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "300"
 
 
 BIRD_API_KEY = os.getenv("BIRD_API_KEY", "")
+
+# MTN MoMo Collections. Keep credentials in Render/environment variables only.
+MOMO_ENVIRONMENT = os.getenv("MOMO_ENVIRONMENT", "sandbox")
+MOMO_BASE_URL = os.getenv("MOMO_BASE_URL", "https://sandbox.momodeveloper.mtn.com").rstrip("/")
+MOMO_COLLECTION_SUBSCRIPTION_KEY = os.getenv("MOMO_COLLECTION_SUBSCRIPTION_KEY", "")
+MOMO_COLLECTION_API_USER = os.getenv("MOMO_COLLECTION_API_USER", "")
+MOMO_COLLECTION_API_KEY = os.getenv("MOMO_COLLECTION_API_KEY", "")
+MOMO_CALLBACK_URL = os.getenv("MOMO_CALLBACK_URL", "")
+SHOP_CURRENCY = os.getenv("SHOP_CURRENCY", "SZL")
+MOMO_CURRENCY = os.getenv("MOMO_CURRENCY", "EUR")
 
 # WhiteNoise storage for efficient static file serving
 # Use Cloudinary for media files if configured, otherwise use local storage

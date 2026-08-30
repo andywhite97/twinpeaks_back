@@ -32,19 +32,19 @@ class HomepageSettingsSerializer(serializers.ModelSerializer):
 class HeroSlideSerializer(serializers.ModelSerializer):
     class Meta:
         model = HeroSlide
-        fields = "__all__"
+        fields = ("id", "title", "subtitle", "image", "button_text", "button_url")
 
 
 class SolutionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Solution
-        fields = "__all__"
+        fields = ("id", "title", "description", "icon", "button_text", "button_url")
 
 
 class StatisticSerializer(serializers.ModelSerializer):
     class Meta:
         model = Statistic
-        fields = "__all__"
+        fields = ("id", "label", "value", "suffix", "prefix")
 
 
 class ProjectImageSerializer(serializers.ModelSerializer):
@@ -58,16 +58,16 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = "__all__"
+        fields = ("id", "title", "slug", "short_description", "long_description", "location", "category", "image", "images", "completion_date", "link_url")
 
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = "__all__"
+        fields = ("id", "name", "slug", "logo")
 
 
 class TestimonialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Testimonial
-        fields = "__all__"
+        fields = ("id", "customer_name", "business", "photo", "rating", "review")

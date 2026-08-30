@@ -6,4 +6,4 @@ class LeaderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Leader
-        fields = "__all__"
+        fields = ("id", "name", "role", "bio", "photo", "facebook", "linkedin")

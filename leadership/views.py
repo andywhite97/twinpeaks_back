@@ -5,6 +5,6 @@ from rest_framework.permissions import AllowAny
 
 
 class LeaderListView(ListAPIView):
-    queryset = Leader.objects.all()
+    queryset = Leader.objects.filter(is_active=True)
     serializer_class = LeaderSerializer
     permission_classes = [AllowAny]

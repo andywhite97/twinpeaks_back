@@ -1,9 +1,22 @@
 from django.contrib.sitemaps import Sitemap
+from django.conf import settings
 from homepage.models import Project
 from products.models import Product
+from urllib.parse import urlsplit
 
 
-class StaticViewSitemap(Sitemap):
+class PublicSitemap(Sitemap):
+    """Generate entries for the frontend domain even when hosted by the API."""
+
+    protocol = "https"
+
+    def get_urls(self, page=1, site=None, protocol=None):
+        public_url = urlsplit(settings.PUBLIC_SITE_URL)
+        site = type("PublicSite", (), {"domain": public_url.netloc, "name": "Twinpeaks"})()
+        return super().get_urls(page=page, site=site, protocol=self.protocol)
+
+
+class StaticViewSitemap(PublicSitemap):
     priority = 0.8
     changefreq = "weekly"
 
@@ -14,7 +27,7 @@ class StaticViewSitemap(Sitemap):
         return item
 
 
-class ProductSitemap(Sitemap):
+class ProductSitemap(PublicSitemap):
     changefreq = "weekly"
     priority = 0.7
 
@@ -28,7 +41,7 @@ class ProductSitemap(Sitemap):
         return f"/products/{obj.slug}"
 
 
-class ProjectSitemap(Sitemap):
+class ProjectSitemap(PublicSitemap):
     changefreq = "monthly"
     priority = 0.7
 
