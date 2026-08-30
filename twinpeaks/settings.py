@@ -36,6 +36,9 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Application definition
 
 INSTALLED_APPS = [
+    # AdminLTE must precede django.contrib.admin so its admin templates win.
+    'django_components',
+    'django_adminlte4',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -110,16 +113,54 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
-        'APP_DIRS': True,
+        # django-components requires explicit loaders rather than APP_DIRS.
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django_adminlte4.context_processors.adminlte',
             ],
+            'loaders': [(
+                'django.template.loaders.cached.Loader',
+                [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'django_components.template_loader.Loader',
+                ],
+            )],
+            'builtins': ['django_components.templatetags.component_tags'],
         },
     },
 ]
+
+COMPONENTS = {
+    'dirs': [],
+    'app_dirs': ['components'],
+    'autodiscover': True,
+}
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django_components.finders.ComponentsFileSystemFinder',
+]
+
+# Use the package's compiled assets, avoiding a separate Node/Vite build for
+# the Django backend. The admin sidebar is generated from registered models.
+ADMINLTE = {
+    'assets_mode': 'static',
+    'title': 'TwinPeaks Administration',
+    'logo': '<b>Twin</b>Peaks',
+    'logo_alt_text': 'TwinPeaks Investment',
+    'admin_brand': '<b>Twin</b>Peaks',
+    'sidebar_theme': 'dark',
+    'layout_fixed_sidebar': True,
+    'layout_fixed_navbar': True,
+    'color_mode_toggle': True,
+    'footer_left': '&copy; 2026 TwinPeaks Investment',
+}
 
 WSGI_APPLICATION = 'twinpeaks.wsgi.application'
 

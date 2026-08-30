@@ -7,7 +7,7 @@ services:
     startCommand: gunicorn twinpeaks.wsgi:application --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.12"
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DJANGO_DEBUG
