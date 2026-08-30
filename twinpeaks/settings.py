@@ -213,6 +213,13 @@ STATICFILES_DIRS = [
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Public storefront base used by integrations that need canonical product links.
+# Keep this configurable for non-production deployments without coupling the
+# catalog feed to the Django API host.
+META_CATALOG_STOREFRONT_URL = os.getenv(
+    "META_CATALOG_STOREFRONT_URL", "https://twinpeaksinvestment.com"
+).rstrip("/")
+
 # Celery configuration
 # In production, set CELERY_BROKER_URL to a real broker such as Redis or RabbitMQ.
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "memory://") 

@@ -97,6 +97,14 @@ If your broker is Redis, also add it as a Render service or use a managed Redis 
 | `/api/auth/refresh/` | POST | Refresh JWT token |
 | `/admin/` | GET | Django admin dashboard |
 
+## Meta Commerce Manager catalog feed
+
+The public feed URL is `https://<your-backend-domain>/api/meta/catalog-feed.csv` (for the configured Render service, this is normally `https://twinpeaks-back.onrender.com/api/meta/catalog-feed.csv`). Paste that URL into Meta Commerce Manager when creating a scheduled feed, with a daily refresh.
+
+It intentionally has no authentication so Meta can retrieve it. It includes only active products with a selling price and main image, exposing their public slug, title, description, stock-derived availability, prices in SZL, storefront link, main/gallery images, brand, and category. It never includes cost, supplier, customer, order, or internal primary-key data.
+
+Set `META_CATALOG_STOREFRONT_URL=https://twinpeaksinvestment.com` in Render (the same value is the safe default). Configure the Cloudinary variables described in `CLOUDINARY_SETUP.md` so product image URLs are publicly accessible HTTPS URLs in production.
+
 ## Post-Deployment Tasks ✓
 
 - [ ] Create superuser: `python manage.py createsuperuser`
