@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from products.models import Product
 from .models import Order, OrderItem, Payment
 from .momo import MomoCollectionClient, MomoConfigurationError, MomoRequestError
+from .meta import send_purchase
 from .serializers import CheckoutSerializer
 
 
@@ -18,7 +19,7 @@ def payment_response(order):
     return {
         "order_id": str(order.public_id), "payment_reference": str(order.payment.reference_id),
         "order_status": order.status, "payment_status": order.payment.status,
-        "amount": f"{order.subtotal:.2f}", "currency": order.currency,
+        "amount": f"{order.subtotal:.2f}", "currency": order.currency, "meta_event_id": str(order.payment.meta_event_id or ""),
     }
 
 
@@ -87,7 +88,7 @@ class MomoCheckoutView(APIView):
                 order.status = Order.Status.PAYMENT_FAILED
                 order.save(update_fields=["status", "updated_at"])
                 return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            Payment.objects.create(order=order, reference_id=reference_id, amount=total, currency=settings.MOMO_CURRENCY)
+            Payment.objects.create(order=order, reference_id=reference_id, amount=total, currency=settings.MOMO_CURRENCY, meta_event_id=data.get("meta_event_id"), event_source_url=data.get("event_source_url", ""))
         order.refresh_from_db()
         return Response(payment_response(order), status=status.HTTP_201_CREATED)
 
@@ -108,4 +109,8 @@ class MomoPaymentStatusView(APIView):
         else:
             order = payment.order
         order.refresh_from_db()
+        payment.refresh_from_db()
+        if order.status == Order.Status.PAID and not payment.meta_event_sent and send_purchase(payment, request):
+            payment.meta_event_sent = True
+            payment.save(update_fields=["meta_event_sent", "updated_at"])
         return Response(payment_response(order))

@@ -38,6 +38,10 @@ services:
         sync: false
       - key: MOMO_COLLECTION_API_KEY
         sync: false
+      - key: META_PIXEL_ID
+        sync: false
+      - key: META_CONVERSIONS_API_ACCESS_TOKEN
+        sync: false
       - key: MOMO_ENVIRONMENT
         value: sandbox
       - key: MOMO_CURRENCY

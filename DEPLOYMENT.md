@@ -105,6 +105,12 @@ It intentionally has no authentication so Meta can retrieve it. It includes only
 
 Set `META_CATALOG_STOREFRONT_URL=https://twinpeaksinvestment.com` in Render (the same value is the safe default). Configure the Cloudinary variables described in `CLOUDINARY_SETUP.md` so product image URLs are publicly accessible HTTPS URLs in production.
 
+## Meta Events Manager
+
+Set `META_PIXEL_ID` in Render and in the frontend production build configuration (`src/environments/environment.ts`). A Pixel ID is public. Set `META_CONVERSIONS_API_ACCESS_TOKEN` in Render only; never put it in Angular or commit it. Browser events include PageView, ViewContent, AddToCart, InitiateCheckout, and Purchase. A paid order sends Purchase through the Conversions API with the same client-generated event ID as the browser Purchase, allowing Meta to deduplicate it.
+
+In Meta Events Manager, open **Test events**, visit a product page, add it to cart, open checkout, and complete a sandbox payment. Confirm the events arrive with product slugs matching the catalog feed. Use the Test Events tool's test code only if you deliberately add a separate test-event configuration; it is not required for normal Pixel testing.
+
 ## Post-Deployment Tasks ✓
 
 - [ ] Create superuser: `python manage.py createsuperuser`

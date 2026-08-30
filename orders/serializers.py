@@ -11,6 +11,8 @@ class CheckoutSerializer(serializers.Serializer):
     email = serializers.EmailField()
     phone_number = serializers.RegexField(r"^\d{8,15}$", max_length=15)
     notes = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+    meta_event_id = serializers.UUIDField(required=False)
+    event_source_url = serializers.URLField(required=False, max_length=500)
     items = CheckoutItemSerializer(many=True, allow_empty=False)
 
     def validate_items(self, items):

@@ -53,5 +53,8 @@ class Payment(models.Model):
     provider_transaction_id = models.CharField(max_length=100, blank=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3)
+    meta_event_id = models.UUIDField(null=True, blank=True, unique=True)
+    event_source_url = models.URLField(blank=True)
+    meta_event_sent = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

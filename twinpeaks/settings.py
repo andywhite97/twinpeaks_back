@@ -252,6 +252,10 @@ MOMO_CALLBACK_URL = os.getenv("MOMO_CALLBACK_URL", "")
 SHOP_CURRENCY = os.getenv("SHOP_CURRENCY", "SZL")
 MOMO_CURRENCY = os.getenv("MOMO_CURRENCY", "EUR")
 
+META_PIXEL_ID = os.getenv("META_PIXEL_ID", "")
+META_CONVERSIONS_API_ACCESS_TOKEN = os.getenv("META_CONVERSIONS_API_ACCESS_TOKEN", "")
+META_GRAPH_API_VERSION = os.getenv("META_GRAPH_API_VERSION", "v22.0")
+
 # WhiteNoise storage for efficient static file serving
 # Use Cloudinary for media files if configured, otherwise use local storage
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
