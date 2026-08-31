@@ -216,6 +216,9 @@ CONTACT_FROM_EMAIL = os.getenv('CONTACT_FROM_EMAIL', 'support@twinpeaksinvestmen
 CONTACT_FROM_NAME = os.getenv('CONTACT_FROM_NAME', 'TwinPeaks Support')
 CONTACT_NOTIFICATION_EMAIL = os.getenv('CONTACT_NOTIFICATION_EMAIL', 'info@twinpeaksinvestment.com')
 ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_NOTIFICATION_EMAIL)
+QUOTE_NOTIFICATION_EMAIL = os.getenv('QUOTE_NOTIFICATION_EMAIL', CONTACT_NOTIFICATION_EMAIL)
+QUOTATION_FROM_EMAIL = os.getenv('QUOTATION_FROM_EMAIL', 'quotations@twinpeaksinvest.com')
+QUOTATION_FROM_NAME = os.getenv('QUOTATION_FROM_NAME', 'TwinPeaks Quotations')
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

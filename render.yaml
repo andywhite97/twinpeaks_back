@@ -38,6 +38,12 @@ services:
         sync: false
       - key: ORDER_NOTIFICATION_EMAIL
         sync: false
+      - key: QUOTE_NOTIFICATION_EMAIL
+        sync: false
+      - key: QUOTATION_FROM_EMAIL
+        value: quotations@twinpeaksinvest.com
+      - key: QUOTATION_FROM_NAME
+        value: TwinPeaks Quotations
       - key: BIRD_API_KEY
         sync: false
       - key: MOMO_COLLECTION_SUBSCRIPTION_KEY

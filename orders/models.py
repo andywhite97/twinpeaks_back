@@ -31,7 +31,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name="items", on_delete=models.PROTECT)
-    product = models.ForeignKey("products.Product", on_delete=models.PROTECT)
+    product = models.ForeignKey("products.Product", null=True, blank=True, on_delete=models.SET_NULL)
     product_name = models.CharField(max_length=150)
     product_slug = models.SlugField()
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
