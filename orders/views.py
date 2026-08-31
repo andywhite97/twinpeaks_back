@@ -13,6 +13,7 @@ from .models import Order, OrderItem, Payment
 from .momo import MomoCollectionClient, MomoConfigurationError, MomoRequestError
 from .meta import send_purchase
 from .serializers import CheckoutSerializer
+from .tasks import send_order_placement_notification
 
 
 def payment_response(order):
@@ -89,6 +90,7 @@ class MomoCheckoutView(APIView):
                 order.save(update_fields=["status", "updated_at"])
                 return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
             Payment.objects.create(order=order, reference_id=reference_id, amount=total, currency=settings.MOMO_CURRENCY, meta_event_id=data.get("meta_event_id"), event_source_url=data.get("event_source_url", ""))
+            transaction.on_commit(lambda order_id=order.pk: send_order_placement_notification(order_id))
         order.refresh_from_db()
         return Response(payment_response(order), status=status.HTTP_201_CREATED)
 

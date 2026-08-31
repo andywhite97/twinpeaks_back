@@ -30,6 +30,14 @@ services:
         sync: false
       - key: EMAIL_HOST_PASSWORD
         sync: false
+      - key: CONTACT_FROM_EMAIL
+        value: support@twinpeaksinvestment.com
+      - key: CONTACT_FROM_NAME
+        value: TwinPeaks Support
+      - key: CONTACT_NOTIFICATION_EMAIL
+        sync: false
+      - key: ORDER_NOTIFICATION_EMAIL
+        sync: false
       - key: BIRD_API_KEY
         sync: false
       - key: MOMO_COLLECTION_SUBSCRIPTION_KEY

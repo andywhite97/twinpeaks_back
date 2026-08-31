@@ -8,8 +8,9 @@ from django.test.client import RequestFactory
 from rest_framework.test import APITestCase
 
 from products.models import Product
-from .models import Order, Payment
+from .models import Order, OrderItem, Payment
 from .meta import _hash, purchase_payload, send_purchase
+from .tasks import send_order_placement_notification
 
 
 @override_settings(
@@ -21,13 +22,15 @@ class MomoCheckoutTests(APITestCase):
         self.product = Product.objects.create(name="Camera", slug="camera", description="", price=Decimal("10.00"), stock_quantity=3)
         self.payload = {"customer_name": "Test Buyer", "email": "buyer@example.com", "phone_number": "26876123456", "items": [{"product_id": self.product.id, "quantity": 2}]}
 
+    @patch("orders.views.send_order_placement_notification")
     @patch("orders.momo.requests.post")
-    def test_starts_payment_with_server_calculated_total(self, post):
+    def test_starts_payment_with_server_calculated_total(self, post, notification):
         token = Mock(ok=True); token.json.return_value = {"access_token": "token"}
         request_to_pay = Mock(status_code=202)
         post.side_effect = [token, request_to_pay]
 
-        response = self.client.post("/api/checkout/momo/", self.payload, format="json")
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post("/api/checkout/momo/", self.payload, format="json")
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["payment_status"], "pending")
@@ -35,6 +38,7 @@ class MomoCheckoutTests(APITestCase):
         self.assertEqual(Order.objects.count(), 1)
         self.assertEqual(Payment.objects.count(), 1)
         self.assertEqual(post.call_args_list[1].kwargs["json"]["amount"], "20.00")
+        notification.assert_called_once_with(Order.objects.first().pk)
 
     @patch("orders.momo.requests.get")
     @patch("orders.momo.requests.post")
@@ -79,3 +83,33 @@ class MetaConversionsTests(APITestCase):
         payment = Payment.objects.create(order=order, reference_id=uuid.uuid4(), meta_event_id=uuid.uuid4(), amount="1.00", currency="SZL", event_source_url="https://twinpeaksinvestment.com/cart")
 
         self.assertFalse(send_purchase(payment, RequestFactory().get("/")))
+
+
+@override_settings(
+    CONTACT_FROM_EMAIL="support@twinpeaksinvestment.com",
+    CONTACT_FROM_NAME="TwinPeaks Support",
+    ORDER_NOTIFICATION_EMAIL="orders@twinpeaksinvestment.com",
+)
+class OrderEmailTests(APITestCase):
+    @patch("orders.tasks.Bird")
+    def test_order_placement_sends_customer_and_team_emails_through_bird(self, bird):
+        product = Product.objects.create(name="Camera", slug="camera", description="", price="25.00", stock_quantity=3)
+        order = Order.objects.create(
+            customer_name="Jane Doe", email="jane@example.com", phone_number="26876123456",
+            subtotal="50.00", currency="SZL",
+        )
+        OrderItem.objects.create(
+            order=order, product=product, product_name=product.name, product_slug=product.slug,
+            unit_price="25.00", quantity=2, line_total="50.00",
+        )
+
+        send_order_placement_notification(order.pk)
+
+        send = bird.return_value.__enter__.return_value.email.send
+        self.assertEqual(send.call_count, 2)
+        customer_email = next(call.kwargs for call in send.call_args_list if call.kwargs["to"] == ["jane@example.com"])
+        team_email = next(call.kwargs for call in send.call_args_list if call.kwargs["to"] == ["orders@twinpeaksinvestment.com"])
+        self.assertEqual(customer_email["from_"], {"email": "support@twinpeaksinvestment.com", "name": "TwinPeaks Support"})
+        self.assertIn(str(order.public_id), customer_email["html"])
+        self.assertIn("50.00 SZL", customer_email["html"])
+        self.assertIn("Camera", team_email["html"])

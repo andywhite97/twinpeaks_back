@@ -212,6 +212,10 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'TwinPeaks <info@twinpeaksinvestment.com>')
+CONTACT_FROM_EMAIL = os.getenv('CONTACT_FROM_EMAIL', 'support@twinpeaksinvestment.com')
+CONTACT_FROM_NAME = os.getenv('CONTACT_FROM_NAME', 'TwinPeaks Support')
+CONTACT_NOTIFICATION_EMAIL = os.getenv('CONTACT_NOTIFICATION_EMAIL', 'info@twinpeaksinvestment.com')
+ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_NOTIFICATION_EMAIL)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
