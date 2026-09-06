@@ -6,4 +6,4 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CompanyProfile
-        fields = ("id", "name", "tagline", "overview", "vision", "mission", "facebook", "twitter", "instagram", "linkedin", "email", "phone", "whatsapp", "address", "business_hours", "copyright_text")
+        fields = ("id", "name", "logo", "tagline", "overview", "vision", "mission", "facebook", "twitter", "instagram", "linkedin", "email", "phone", "whatsapp", "address", "business_hours", "copyright_text")
