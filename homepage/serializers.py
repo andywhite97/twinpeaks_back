@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Brand, HeroSlide, HomepageSettings, Project, ProjectImage, Solution, Statistic, Testimonial
+from .models import HomepageSettings, Project, ProjectImage
 
 
 class HomepageSettingsSerializer(serializers.ModelSerializer):
@@ -29,24 +29,6 @@ class HomepageSettingsSerializer(serializers.ModelSerializer):
         return [badge.strip() for badge in obj.trust_badges.splitlines() if badge.strip()]
 
 
-class HeroSlideSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HeroSlide
-        fields = ("id", "title", "subtitle", "image", "button_text", "button_url")
-
-
-class SolutionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Solution
-        fields = ("id", "title", "description", "icon", "button_text", "button_url")
-
-
-class StatisticSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Statistic
-        fields = ("id", "label", "value", "suffix", "prefix")
-
-
 class ProjectImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectImage
@@ -59,15 +41,3 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ("id", "title", "slug", "short_description", "long_description", "location", "category", "image", "images", "completion_date", "link_url")
-
-
-class BrandSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Brand
-        fields = ("id", "name", "slug", "logo")
-
-
-class TestimonialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Testimonial
-        fields = ("id", "customer_name", "business", "photo", "rating", "review")

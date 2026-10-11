@@ -1,10 +1,7 @@
-from decimal import Decimal
-
 from django.db import transaction
 from rest_framework import serializers
 
-from products.models import Product
-from services.models import Service
+from services.models import Solution
 from .models import ContactMessage, Quotation, QuotationItem
 
 
@@ -16,14 +13,23 @@ class ContactMessageSerializer(serializers.ModelSerializer):
 
 
 class QuotationRequestItemSerializer(serializers.Serializer):
-    product_id = serializers.IntegerField(required=False, min_value=1)
-    service_id = serializers.IntegerField(required=False, min_value=1)
+    solution_id = serializers.IntegerField(required=False, min_value=1)
+    service_id = serializers.IntegerField(required=False, min_value=1, write_only=True)
     description = serializers.CharField(required=False, allow_blank=False, max_length=2000)
     quantity = serializers.IntegerField(min_value=1, max_value=99, default=1)
 
+    def to_internal_value(self, data):
+        if isinstance(data, dict) and "product_id" in data:
+            raise serializers.ValidationError({"product_id": "Product catalog quotation requests have been retired."})
+        return super().to_internal_value(data)
+
     def validate(self, attrs):
-        if sum(key in attrs for key in ("product_id", "service_id", "description")) != 1:
-            raise serializers.ValidationError("Each quote item must specify one product, service, or custom description.")
+        if "service_id" in attrs:
+            if "solution_id" in attrs:
+                raise serializers.ValidationError("Specify solution_id once; do not also supply service_id.")
+            attrs["solution_id"] = attrs.pop("service_id")
+        if sum(key in attrs for key in ("solution_id", "description")) != 1:
+            raise serializers.ValidationError("Each quote item must specify one solution or custom description.")
         return attrs
 
 
@@ -42,19 +48,11 @@ class QuotationRequestSerializer(serializers.Serializer):
             quotation = Quotation.objects.create(**validated_data)
             for position, item in enumerate(items):
                 quantity = item["quantity"]
-                if "product_id" in item:
-                    product = Product.objects.filter(pk=item["product_id"], is_active=True).first()
-                    if not product:
-                        raise serializers.ValidationError({"items": "A selected product is no longer available."})
-                    price = product.sale_price if product.sale_price is not None else product.price
-                    if price is None:
-                        price = Decimal("0.00")
-                    QuotationItem.objects.create(quotation=quotation, product=product, title=product.name, description=product.description, quantity=quantity, unit_price=price, sort_order=position)
-                elif "service_id" in item:
-                    service = Service.objects.filter(pk=item["service_id"], is_active=True).first()
-                    if not service:
-                        raise serializers.ValidationError({"items": "A selected service is no longer available."})
-                    QuotationItem.objects.create(quotation=quotation, service=service, title=service.title, description=service.description, quantity=quantity, sort_order=position)
+                if "solution_id" in item:
+                    solution = Solution.objects.filter(pk=item["solution_id"], is_active=True).first()
+                    if not solution:
+                        raise serializers.ValidationError({"items": "A selected solution is no longer available."})
+                    QuotationItem.objects.create(quotation=quotation, solution=solution, title=solution.title, description=solution.description, quantity=quantity, sort_order=position)
                 else:
                     QuotationItem.objects.create(quotation=quotation, title="Custom requirement", description=item["description"], quantity=quantity, sort_order=position)
             quotation.recalculate_totals()

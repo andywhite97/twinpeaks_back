@@ -37,45 +37,6 @@ class HomepageSettings(TimeStampedModel):
         return "Homepage Settings"
 
 
-class HeroSlide(TimeStampedModel):
-    title = models.CharField(max_length=150)
-    subtitle = models.TextField(blank=True)
-    image = models.ImageField(upload_to="homepage/slides/")
-    button_text = models.CharField(max_length=80, blank=True)
-    button_url = models.CharField(max_length=255, blank=True)
-
-    def __str__(self):
-        return self.title
-
-
-class Solution(TimeStampedModel):
-    title = models.CharField(max_length=150)
-    description = models.TextField(blank=True)
-    icon = models.CharField(max_length=80, blank=True, help_text="Use a simple icon name or class")
-    button_text = models.CharField(max_length=80, blank=True)
-    button_url = models.CharField(max_length=255, blank=True)
-
-    class Meta:
-        ordering = ["display_order", "created_at"]
-        verbose_name_plural = "Solutions"
-
-    def __str__(self):
-        return self.title
-
-
-class Statistic(TimeStampedModel):
-    label = models.CharField(max_length=120)
-    value = models.CharField(max_length=50)
-    suffix = models.CharField(max_length=20, blank=True)
-    prefix = models.CharField(max_length=20, blank=True)
-
-    class Meta:
-        ordering = ["display_order", "created_at"]
-
-    def __str__(self):
-        return self.label
-
-
 class Project(TimeStampedModel):
     title = models.CharField(max_length=150)
     slug = models.SlugField(unique=True, blank=True)
@@ -111,35 +72,3 @@ class ProjectImage(models.Model):
 
     def __str__(self):
         return f"{self.project.title} image"
-
-
-class Brand(TimeStampedModel):
-    name = models.CharField(max_length=120)
-    slug = models.SlugField(unique=True, blank=True)
-    logo = models.ImageField(upload_to="homepage/brands/")
-    is_featured = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ["display_order", "created_at"]
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-
-class Testimonial(TimeStampedModel):
-    customer_name = models.CharField(max_length=120)
-    business = models.CharField(max_length=150, blank=True)
-    photo = models.ImageField(upload_to="homepage/testimonials/", blank=True, null=True)
-    rating = models.PositiveIntegerField(default=5)
-    review = models.TextField()
-
-    class Meta:
-        ordering = ["display_order", "created_at"]
-
-    def __str__(self):
-        return self.customer_name

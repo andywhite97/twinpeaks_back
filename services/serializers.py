@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from .models import Service
+from .models import Solution
 
 
-class ServiceSerializer(serializers.ModelSerializer):
+class SolutionSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Service
+        model = Solution
         fields = ("id", "title", "description", "icon", "image")

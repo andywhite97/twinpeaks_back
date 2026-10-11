@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from products.models import Product
+from services.models import Solution
 
 from .models import ContactMessage, Quotation
 from .tasks import send_contact_message_notification, send_quotation_request_notification
@@ -82,8 +82,8 @@ class ContactMessageTests(TestCase):
         self.assertIn('contact you shortly', acknowledgement['html'])
 
     @patch('contact.views.send_quotation_request_notification')
-    def test_product_quote_request_is_saved_and_notified(self, notification):
-        product = Product.objects.create(name='Camera', slug='camera', description='', price='25.00', stock_quantity=2)
+    def test_solution_quote_request_is_saved_and_notified(self, notification):
+        service = Solution.objects.create(title='Camera support', description='Installation and support')
         payload = {
             'name': 'Jane Doe',
             'email': 'jane@example.com',
@@ -91,14 +91,14 @@ class ContactMessageTests(TestCase):
             'message': 'Please quote for branding and installation.',
         }
 
-        payload['items'] = [{'product_id': product.id, 'quantity': 1}]
+        payload['items'] = [{'solution_id': service.id, 'quantity': 1}]
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post('/api/quotations/', payload, format='json')
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Quotation.objects.count(), 1)
         quote_request = Quotation.objects.get()
-        self.assertEqual(quote_request.items.first().product, product)
+        self.assertEqual(quote_request.items.first().solution, service)
         notification.assert_called_once_with(quote_request.pk)
 
     @override_settings(
@@ -110,9 +110,9 @@ class ContactMessageTests(TestCase):
     )
     @patch('contact.tasks.Bird')
     def test_quote_request_sends_customer_and_team_emails_through_bird(self, bird):
-        product = Product.objects.create(name='Camera', slug='camera', description='', price='25.00', stock_quantity=2)
+        service = Solution.objects.create(title='Camera support', description='Installation and support')
         quote_request = Quotation.objects.create(name='Jane Doe', email='jane@example.com', phone_number='26876123456', message='Please quote for branding and installation.')
-        quote_request.items.create(product=product, title=product.name, description='', quantity=1, unit_price='25.00')
+        quote_request.items.create(solution=service, title=service.title, description='', quantity=1, unit_price='25.00')
 
         send_quotation_request_notification(quote_request.pk)
 
@@ -125,15 +125,15 @@ class ContactMessageTests(TestCase):
         self.assertIn('26876123456', team_email['html'])
 
     @patch('contact.views.send_quotation_accepted_notification')
-    def test_issued_quote_can_be_viewed_accepted_and_converted_once(self, notification):
-        product = Product.objects.create(name='Camera', slug='camera', description='', price='25.00', stock_quantity=2)
+    def test_issued_quote_can_be_viewed_and_accepted(self, notification):
+        service = Solution.objects.create(title='Camera support', description='Installation and support')
         quotation = Quotation.objects.create(name='Jane Doe', email='jane@example.com', phone_number='26876123456', message='Please quote.')
-        quotation.items.create(product=product, title=product.name, quantity=2, unit_price='25.00')
+        quotation.items.create(solution=service, title=service.title, quantity=2, unit_price='25.00')
         quotation.issue()
 
         response = self.client.get(f'/api/quotations/public/{quotation.public_access_token}/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['items'][0]['title'], 'Camera')
+        self.assertEqual(response.data['items'][0]['title'], 'Camera support')
         self.assertEqual(response.data['currency'], 'SZL')
         quotation.refresh_from_db()
         self.assertEqual(quotation.status, Quotation.Status.VIEWED)
@@ -145,12 +145,6 @@ class ContactMessageTests(TestCase):
         self.assertEqual(quotation.status, Quotation.Status.ACCEPTED)
         notification.assert_called_once_with(quotation.pk)
 
-        order = quotation.convert_to_order()
-        quotation.refresh_from_db()
-        self.assertEqual(quotation.status, Quotation.Status.CONVERTED_TO_ORDER)
-        self.assertEqual(order.items.count(), 1)
-        with self.assertRaises(ValueError):
-            quotation.convert_to_order()
 
     def test_public_pdf_route_is_not_handled_as_a_decision(self):
         quotation = Quotation.objects.create(name='Jane Doe', email='jane@example.com', phone_number='26876123456', message='Please quote.')
@@ -160,6 +154,32 @@ class ContactMessageTests(TestCase):
         response = self.client.get(f'/api/quotations/public/{quotation.public_access_token}/pdf/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_product_quote_requests_are_rejected_without_creating_a_quote(self):
+        response = self.client.post('/api/quotations/', {
+            'name': 'Jane Doe', 'email': 'jane@example.com', 'phone_number': '26876123456',
+            'items': [{'product_id': 1, 'description': 'Old product request', 'quantity': 1}],
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Quotation.objects.count(), 0)
+
+    @patch('contact.views.send_quotation_request_notification')
+    def test_legacy_service_id_maps_to_the_renamed_solution(self, notification):
+        solution = Solution.objects.create(title='Network Infrastructure', description='Published')
+        response = self.client.post('/api/quotations/', {
+            'name': 'Jane Doe', 'email': 'jane@example.com', 'phone_number': '26876123456',
+            'items': [{'service_id': solution.pk, 'quantity': 1}],
+        }, format='json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Quotation.objects.get().items.get().solution_id, solution.pk)
+
+    def test_solution_and_legacy_service_id_cannot_be_combined(self):
+        response = self.client.post('/api/quotations/', {
+            'name': 'Jane Doe', 'email': 'jane@example.com', 'phone_number': '26876123456',
+            'items': [{'solution_id': 1, 'service_id': 1, 'quantity': 1}],
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Quotation.objects.count(), 0)
 
 
 class QuotationPrivacyTests(TestCase):

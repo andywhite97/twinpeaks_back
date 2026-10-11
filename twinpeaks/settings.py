@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'users',
     'core',
     'services',
+    # Retired apps stay installed so their historical/deletion migrations run.
     'leadership',
     'contact',
     'products',
@@ -216,7 +217,6 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'TwinPeaks <info@twinpeaksi
 CONTACT_FROM_EMAIL = os.getenv('CONTACT_FROM_EMAIL', 'support@twinpeaksinvestment.com')
 CONTACT_FROM_NAME = os.getenv('CONTACT_FROM_NAME', 'TwinPeaks Support')
 CONTACT_NOTIFICATION_EMAIL = os.getenv('CONTACT_NOTIFICATION_EMAIL', 'info@twinpeaksinvestment.com')
-ORDER_NOTIFICATION_EMAIL = os.getenv('ORDER_NOTIFICATION_EMAIL', CONTACT_NOTIFICATION_EMAIL)
 QUOTE_NOTIFICATION_EMAIL = os.getenv('QUOTE_NOTIFICATION_EMAIL', CONTACT_NOTIFICATION_EMAIL)
 QUOTATION_FROM_EMAIL = os.getenv('QUOTATION_FROM_EMAIL', 'quotations@twinpeaksinvest.com')
 QUOTATION_FROM_NAME = os.getenv('QUOTATION_FROM_NAME', 'TwinPeaks Quotations')
@@ -264,11 +264,8 @@ STATICFILES_DIRS = [
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Public storefront base used by integrations that need canonical product links.
-# Keep this configurable for non-production deployments without coupling the
-# catalog feed to the Django API host.
+# Canonical frontend domain used by public links and the sitemap.
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://twinpeaksinvestment.com").rstrip("/")
-META_CATALOG_STOREFRONT_URL = os.getenv("META_CATALOG_STOREFRONT_URL", PUBLIC_SITE_URL).rstrip("/")
 
 # Celery configuration
 # In production, set CELERY_BROKER_URL to a real broker such as Redis or RabbitMQ.
@@ -291,19 +288,9 @@ CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "300"
 
 BIRD_API_KEY = os.getenv("BIRD_API_KEY", "")
 
-# MTN MoMo Collections. Keep credentials in Render/environment variables only.
-MOMO_ENVIRONMENT = os.getenv("MOMO_ENVIRONMENT", "sandbox")
-MOMO_BASE_URL = os.getenv("MOMO_BASE_URL", "https://sandbox.momodeveloper.mtn.com").rstrip("/")
-MOMO_COLLECTION_SUBSCRIPTION_KEY = os.getenv("MOMO_COLLECTION_SUBSCRIPTION_KEY", "")
-MOMO_COLLECTION_API_USER = os.getenv("MOMO_COLLECTION_API_USER", "")
-MOMO_COLLECTION_API_KEY = os.getenv("MOMO_COLLECTION_API_KEY", "")
-MOMO_CALLBACK_URL = os.getenv("MOMO_CALLBACK_URL", "")
+# Quotation currency. Preserve the existing environment variable name.
 SHOP_CURRENCY = os.getenv("SHOP_CURRENCY", "SZL")
-MOMO_CURRENCY = os.getenv("MOMO_CURRENCY", "EUR")
 
-META_PIXEL_ID = os.getenv("META_PIXEL_ID", "")
-META_CONVERSIONS_API_ACCESS_TOKEN = os.getenv("META_CONVERSIONS_API_ACCESS_TOKEN", "")
-META_GRAPH_API_VERSION = os.getenv("META_GRAPH_API_VERSION", "v22.0")
 
 # WhiteNoise storage for efficient static file serving
 # Use Cloudinary for media files if configured, otherwise use local storage

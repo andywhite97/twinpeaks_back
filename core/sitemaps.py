@@ -1,7 +1,6 @@
 from django.contrib.sitemaps import Sitemap
 from django.conf import settings
 from homepage.models import Project
-from products.models import Product
 from urllib.parse import urlsplit
 
 
@@ -21,24 +20,10 @@ class StaticViewSitemap(PublicSitemap):
     changefreq = "weekly"
 
     def items(self):
-        return ["/", "/products", "/services", "/projects", "/about", "/contact"]
+        return ["/", "/solutions", "/projects", "/about", "/contact", "/request-quote"]
 
     def location(self, item):
         return item
-
-
-class ProductSitemap(PublicSitemap):
-    changefreq = "weekly"
-    priority = 0.7
-
-    def items(self):
-        return Product.objects.filter(is_active=True)
-
-    def lastmod(self, obj):
-        return obj.created_at
-
-    def location(self, obj):
-        return f"/products/{obj.slug}"
 
 
 class ProjectSitemap(PublicSitemap):

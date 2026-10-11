@@ -1,10 +1,10 @@
 from rest_framework.generics import ListAPIView
-from .models import Service
-from .serializers import ServiceSerializer
+from .models import Solution
+from .serializers import SolutionSerializer
 from rest_framework.permissions import AllowAny
 
 
-class ServiceListView(ListAPIView):
-    queryset = Service.objects.filter(is_active=True)
-    serializer_class = ServiceSerializer
+class SolutionListView(ListAPIView):
+    queryset = Solution.objects.filter(is_active=True).order_by("pk")
+    serializer_class = SolutionSerializer
     permission_classes = [AllowAny]

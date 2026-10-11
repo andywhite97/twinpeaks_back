@@ -33,7 +33,8 @@ class Quotation(models.Model):
         ACCEPTED = "accepted", "Accepted"
         DECLINED = "declined", "Declined"
         EXPIRED = "expired", "Expired"
-        CONVERTED_TO_ORDER = "converted_to_order", "Converted to order"
+        # Retain this status for historical quotations; new conversions are retired.
+        CONVERTED_TO_ORDER = "converted_to_order", "Converted to order (legacy)"
         CANCELLED = "cancelled", "Cancelled"
 
     # The migration initially assigns UUIDs to legacy records, so leave room for
@@ -60,7 +61,6 @@ class Quotation(models.Model):
     accepted_at = models.DateTimeField(null=True, blank=True)
     declined_at = models.DateTimeField(null=True, blank=True)
     decline_reason = models.CharField(max_length=500, blank=True)
-    converted_order = models.OneToOneField("orders.Order", null=True, blank=True, on_delete=models.PROTECT, related_name="source_quotation")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -111,30 +111,10 @@ class Quotation(models.Model):
         self.sent_at = timezone.now()
         self.save(update_fields=["subtotal", "total", "valid_until", "status", "sent_at", "updated_at"])
 
-    def convert_to_order(self):
-        from orders.models import Order, OrderItem
-
-        with transaction.atomic():
-            quotation = Quotation.objects.select_for_update().prefetch_related("items").get(pk=self.pk)
-            if quotation.status != self.Status.ACCEPTED or quotation.converted_order_id:
-                raise ValueError("Only an accepted, unconverted quotation can be converted to an order.")
-            order = Order.objects.create(
-                customer_name=quotation.name, email=quotation.email, phone_number=quotation.phone_number,
-                notes=f"Converted from quotation {quotation.quote_number}. {quotation.message}".strip(),
-                subtotal=quotation.total, currency=quotation.currency, status=Order.Status.PAYMENT_REVIEW,
-            )
-            for item in quotation.items.all():
-                OrderItem.objects.create(order=order, product=item.product, product_name=item.title, product_slug=item.product.slug if item.product else "", unit_price=item.unit_price, quantity=item.quantity, line_total=item.line_total)
-            quotation.converted_order = order
-            quotation.status = self.Status.CONVERTED_TO_ORDER
-            quotation.save(update_fields=["converted_order", "status", "updated_at"])
-        return order
-
 
 class QuotationItem(models.Model):
     quotation = models.ForeignKey(Quotation, related_name="items", on_delete=models.CASCADE)
-    product = models.ForeignKey("products.Product", null=True, blank=True, on_delete=models.SET_NULL)
-    service = models.ForeignKey("services.Service", null=True, blank=True, on_delete=models.SET_NULL)
+    solution = models.ForeignKey("services.Solution", null=True, blank=True, on_delete=models.SET_NULL)
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True)
     quantity = models.PositiveIntegerField(default=1)

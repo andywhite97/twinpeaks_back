@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from rest_framework.test import APITestCase
 
-from .models import Service
+from .models import Solution
 
 
 def png_upload(name):
@@ -16,19 +16,19 @@ def png_upload(name):
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
 
 
-class ServiceImageTests(APITestCase):
+class SolutionImageTests(APITestCase):
     def admin_form(self, files=None):
-        request = RequestFactory().get("/admin/services/service/add/")
+        request = RequestFactory().get("/admin/services/solution/add/")
         request.user = get_user_model()(is_staff=True, is_superuser=True)
-        form_class = admin.site._registry[Service].get_form(request)
+        form_class = admin.site._registry[Solution].get_form(request)
         return form_class(
             data={"title": "IT Support & Maintenance", "description": "Published service", "is_active": True},
             files=files or {},
         )
 
     def test_existing_services_without_images_remain_available(self):
-        service = Service.objects.create(title="Network Infrastructure", description="Published")
-        response = self.client.get("/api/services/")
+        service = Solution.objects.create(title="Network Infrastructure", description="Published")
+        response = self.client.get("/api/solutions/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data[0]["id"], service.pk)
         self.assertIsNone(response.data[0]["image"])
@@ -38,9 +38,9 @@ class ServiceImageTests(APITestCase):
         self.assertTrue(form.is_valid(), form.errors)
         service = form.save()
         service.refresh_from_db()
-        self.assertTrue(service.icon.name.startswith("services/icons/"))
-        self.assertTrue(service.image.name.startswith("services/images/"))
-        response = self.client.get("/api/services/")
+        self.assertTrue(service.icon.name.startswith("solutions/icons/"))
+        self.assertTrue(service.image.name.startswith("solutions/images/"))
+        response = self.client.get("/api/solutions/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data[0]["image"], "http://testserver" + service.image.url)
         self.assertEqual(response.data[0]["icon"], "http://testserver" + service.icon.url)
@@ -54,3 +54,13 @@ class ServiceImageTests(APITestCase):
         form = self.admin_form({"image": SimpleUploadedFile("fake.png", b"not an image", content_type="image/png")})
         self.assertFalse(form.is_valid())
         self.assertIn("image", form.errors)
+
+    def test_solutions_endpoint_uses_catalog_model_and_legacy_alias(self):
+        solution = Solution.objects.create(title="Network Infrastructure", description="Catalog description")
+        Solution.objects.create(title="Hidden", description="Private", is_active=False)
+        canonical = self.client.get("/api/solutions/")
+        legacy = self.client.get("/api/services/")
+        self.assertEqual(canonical.status_code, 200)
+        self.assertEqual(canonical.data, legacy.data)
+        self.assertEqual([record["id"] for record in canonical.data], [solution.pk])
+        self.assertEqual(canonical.data[0]["description"], "Catalog description")

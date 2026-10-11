@@ -22,8 +22,6 @@ services:
         value: "https://twinpeaksinvestment.com"
       - key: PUBLIC_SITE_URL
         value: "https://twinpeaksinvestment.com"
-      - key: META_CATALOG_STOREFRONT_URL
-        value: "https://twinpeaksinvestment.com"
       - key: CORS_ALLOW_ALL_ORIGINS
         value: "False"
       - key: EMAIL_HOST_USER
@@ -36,8 +34,6 @@ services:
         value: TwinPeaks Support
       - key: CONTACT_NOTIFICATION_EMAIL
         sync: false
-      - key: ORDER_NOTIFICATION_EMAIL
-        sync: false
       - key: QUOTE_NOTIFICATION_EMAIL
         sync: false
       - key: QUOTATION_FROM_EMAIL
@@ -46,20 +42,6 @@ services:
         value: TwinPeaks Quotations
       - key: BIRD_API_KEY
         sync: false
-      - key: MOMO_COLLECTION_SUBSCRIPTION_KEY
-        sync: false
-      - key: MOMO_COLLECTION_API_USER
-        sync: false
-      - key: MOMO_COLLECTION_API_KEY
-        sync: false
-      - key: META_PIXEL_ID
-        sync: false
-      - key: META_CONVERSIONS_API_ACCESS_TOKEN
-        sync: false
-      - key: MOMO_ENVIRONMENT
-        value: sandbox
-      - key: MOMO_CURRENCY
-        value: EUR
       - key: SHOP_CURRENCY
         value: SZL
       - key: SECURE_SSL_REDIRECT

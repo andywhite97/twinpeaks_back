@@ -1,13 +1,13 @@
 from django.db import models
 
 
-class Service(models.Model):
+class Solution(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
-    icon = models.ImageField(upload_to="services/icons/", blank=True, null=True)
+    icon = models.ImageField(upload_to="solutions/icons/", blank=True, null=True)
     image = models.ImageField(
-        upload_to="services/images/", blank=True, null=True,
-        help_text="Optional main service image (PNG, JPEG or WebP).",
+        upload_to="solutions/images/", blank=True, null=True,
+        help_text="Optional main solution image (PNG, JPEG or WebP).",
     )
     is_active = models.BooleanField(default=True)
 
