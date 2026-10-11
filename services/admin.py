@@ -7,4 +7,4 @@ class ServiceAdmin(admin.ModelAdmin):
     list_display = ("title", "is_active")
     list_filter = ("is_active",)
     search_fields = ("title",)
-    fields = ("title", "description", "icon", "is_active")
+    fields = ("title", "description", "icon", "image", "is_active")
