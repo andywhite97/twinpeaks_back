@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.conf import settings
+from urllib.parse import urlsplit, urlunsplit
 
 
 class CheckoutItemSerializer(serializers.Serializer):
@@ -14,6 +16,13 @@ class CheckoutSerializer(serializers.Serializer):
     meta_event_id = serializers.UUIDField(required=False)
     event_source_url = serializers.URLField(required=False, max_length=500)
     items = CheckoutItemSerializer(many=True, allow_empty=False)
+
+    def validate_event_source_url(self, value):
+        url = urlsplit(value)
+        public = urlsplit(settings.PUBLIC_SITE_URL)
+        if url.scheme != public.scheme or url.netloc != public.netloc or url.path != '/cart':
+            raise serializers.ValidationError('Only the public checkout URL is allowed.')
+        return urlunsplit((url.scheme, url.netloc, '/cart', '', ''))
 
     def validate_items(self, items):
         product_ids = [item["product_id"] for item in items]

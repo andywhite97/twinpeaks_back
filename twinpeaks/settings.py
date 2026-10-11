@@ -86,6 +86,7 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    'contact.middleware.QuotationPrivacyMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',

@@ -160,3 +160,46 @@ class ContactMessageTests(TestCase):
         response = self.client.get(f'/api/quotations/public/{quotation.public_access_token}/pdf/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
+
+
+class QuotationPrivacyTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.quote = Quotation.objects.create(name='Existing Customer', email='customer@example.com',
+            phone_number='26876123456', message='Existing request')
+        self.quote.items.create(title='Installation', quantity=1, unit_price='20')
+        self.quote.issue()
+        self.token = self.quote.public_access_token
+
+    def assert_private(self, response):
+        self.assertIn('no-store', response['Cache-Control'])
+        self.assertIn('private', response['Cache-Control'])
+        self.assertEqual(response['Referrer-Policy'], 'no-referrer')
+        self.assertIn('noindex', response['X-Robots-Tag'])
+
+    @patch('contact.views.send_quotation_accepted_notification')
+    def test_existing_token_view_pdf_accept_and_conflict_are_protected(self, notification):
+        base = f'/api/quotations/public/{self.token}/'
+        view = self.client.get(base)
+        self.assertEqual(view.status_code, 200)
+        self.assertEqual(view.data['name'], 'Existing Customer')
+        self.assert_private(view)
+        pdf = self.client.get(base + 'pdf/')
+        self.assertEqual(pdf.status_code, 200)
+        self.assertTrue(pdf.content.startswith(b'%PDF'))
+        self.assert_private(pdf)
+        accepted = self.client.post(base + 'accept/', {}, format='json')
+        self.assertEqual(accepted.status_code, 200)
+        self.assert_private(accepted)
+        conflict = self.client.post(base + 'decline/', {}, format='json')
+        self.assertEqual(conflict.status_code, 409)
+        self.assert_private(conflict)
+        self.quote.refresh_from_db()
+        self.assertEqual(self.quote.public_access_token, self.token)
+
+    def test_decline_missing_and_validation_responses_are_protected(self):
+        declined = self.client.post(f'/api/quotations/public/{self.token}/decline/', {}, format='json')
+        self.assertEqual(declined.status_code, 200)
+        self.assert_private(declined)
+        self.assert_private(self.client.get('/api/quotations/public/00000000-0000-0000-0000-000000000000/'))
+        self.assert_private(self.client.post('/api/quotations/', {}, format='json'))

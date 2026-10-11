@@ -24,13 +24,21 @@ def send_order_placement_notification(order_id: int) -> None:
 
 def _send_customer_acknowledgement(client: Bird, order: Order) -> None:
     subject = f"We received your order | TwinPeaks Investment"
+    if order.status == Order.Status.PENDING_PAYMENT:
+        payment_message = "Please approve the payment request on your phone to complete your order."
+    elif order.status == Order.Status.PAID:
+        payment_message = "Your payment has been received and your order is confirmed."
+    elif order.status == Order.Status.PAYMENT_FAILED:
+        payment_message = "The payment attempt failed. Contact our team if your account was debited."
+    else:
+        payment_message = "Payment confirmation needs review. Please contact our team with this reference; do not make another payment."
     html_body = (
         f"<p>Hello {escape(order.customer_name)},</p>"
         "<p>Thank you for your order with <strong>TwinPeaks Investment</strong>. "
-        "We have received your order and sent a payment request to your mobile phone.</p>"
+        "We have received your order.</p>"
         f"<p><strong>Order reference:</strong> {order.public_id}<br>"
         f"<strong>Total:</strong> {order.subtotal:.2f} {escape(order.currency)}</p>"
-        "<p>Please approve the payment request to complete your order. Our team will contact you with any further support.</p>"
+        f"<p>{payment_message} Our team will contact you with any further support.</p>"
         "<p>Kind regards,<br>TwinPeaks Investment</p>"
     )
     _send(client, subject, html_body, [order.email])

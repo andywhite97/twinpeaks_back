@@ -1,8 +1,8 @@
 from decimal import Decimal
+import uuid
 
 from django.conf import settings
-from django.db import transaction
-from django.db.models import F
+from django.db import IntegrityError, transaction
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -10,7 +10,8 @@ from rest_framework.views import APIView
 
 from products.models import Product
 from .models import Order, OrderItem, Payment
-from .momo import MomoCollectionClient, MomoConfigurationError, MomoRequestError
+from .momo import MomoAmbiguousError, MomoCollectionClient, MomoConfigurationError, MomoRequestError
+from .reconciliation import reconcile_payment
 from .meta import send_purchase
 from .serializers import CheckoutSerializer
 from .tasks import send_order_placement_notification
@@ -24,35 +25,15 @@ def payment_response(order):
     }
 
 
-def reconcile_payment(payment, provider_data):
-    provider_status = provider_data.get("status", "").upper()
-    payment.provider_status = provider_status
-    payment.provider_transaction_id = provider_data.get("financialTransactionId", "")
-    if provider_status == "SUCCESSFUL":
-        with transaction.atomic():
-            order = Order.objects.select_for_update().get(pk=payment.order_id)
-            payment = Payment.objects.select_for_update().get(pk=payment.pk)
-            if payment.status != Payment.Status.SUCCESSFUL:
-                for item in order.items.select_related("product").select_for_update():
-                    updated = Product.objects.filter(pk=item.product_id, stock_quantity__gte=item.quantity).update(stock_quantity=F("stock_quantity") - item.quantity)
-                    if not updated:
-                        order.status = Order.Status.PAYMENT_REVIEW
-                        order.save(update_fields=["status", "updated_at"])
-                        payment.save(update_fields=["provider_status", "provider_transaction_id", "updated_at"])
-                        return order
-                payment.status = Payment.Status.SUCCESSFUL
-                payment.save(update_fields=["status", "provider_status", "provider_transaction_id", "updated_at"])
-                order.status = Order.Status.PAID
-                order.save(update_fields=["status", "updated_at"])
-            return order
-    if provider_status in {"FAILED", "REJECTED", "TIMEOUT"}:
-        payment.status = Payment.Status.FAILED
-        payment.save(update_fields=["status", "provider_status", "provider_transaction_id", "updated_at"])
-        payment.order.status = Order.Status.PAYMENT_FAILED
-        payment.order.save(update_fields=["status", "updated_at"])
-    else:
-        payment.save(update_fields=["provider_status", "provider_transaction_id", "updated_at"])
-    return payment.order
+def existing_checkout_response(payment, data):
+    """Same attempt may be replayed, but never applied to a different basket/customer."""
+    order = payment.order
+    requested = sorted((item['product_id'], item['quantity']) for item in data['items'])
+    actual = sorted((item.product_id, item.quantity) for item in order.items.all())
+    fields = ('customer_name', 'email', 'phone_number', 'notes')
+    if requested != actual or any(getattr(order, field) != data.get(field, '') for field in fields):
+        return Response({'detail': 'This payment attempt belongs to a different checkout.'}, status=status.HTTP_409_CONFLICT)
+    return Response(payment_response(order), status=status.HTTP_200_OK)
 
 
 class MomoCheckoutView(APIView):
@@ -64,33 +45,72 @@ class MomoCheckoutView(APIView):
         if settings.SHOP_CURRENCY != settings.MOMO_CURRENCY:
             return Response({"detail": "Checkout currency is not configured for this MTN MoMo environment."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         data = serializer.validated_data
-        with transaction.atomic():
-            product_ids = [item["product_id"] for item in data["items"]]
-            products = Product.objects.select_for_update().filter(pk__in=product_ids, is_active=True)
-            products_by_id = {product.pk: product for product in products}
-            if len(products_by_id) != len(product_ids):
-                return Response({"detail": "One or more products are no longer available."}, status=status.HTTP_400_BAD_REQUEST)
-            total = Decimal("0.00")
-            line_items = []
-            for item in data["items"]:
-                product = products_by_id[item["product_id"]]
-                if product.stock_quantity < item["quantity"] or product.price is None:
-                    return Response({"detail": f"{product.name} is unavailable in the requested quantity."}, status=status.HTTP_400_BAD_REQUEST)
-                unit_price = product.sale_price if product.sale_price is not None else product.price
-                line_total = unit_price * item["quantity"]
-                total += line_total
-                line_items.append((product, item["quantity"], unit_price, line_total))
-            order = Order.objects.create(customer_name=data["customer_name"], email=data["email"], phone_number=data["phone_number"], notes=data.get("notes", ""), subtotal=total, currency=settings.SHOP_CURRENCY)
-            for product, quantity, unit_price, line_total in line_items:
-                OrderItem.objects.create(order=order, product=product, product_name=product.name, product_slug=product.slug, unit_price=unit_price, quantity=quantity, line_total=line_total)
-            try:
-                reference_id = MomoCollectionClient().request_to_pay(amount=total, currency=settings.MOMO_CURRENCY, phone_number=order.phone_number, external_id=order.public_id)
-            except (MomoConfigurationError, MomoRequestError) as exc:
-                order.status = Order.Status.PAYMENT_FAILED
-                order.save(update_fields=["status", "updated_at"])
-                return Response({"detail": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-            Payment.objects.create(order=order, reference_id=reference_id, amount=total, currency=settings.MOMO_CURRENCY, meta_event_id=data.get("meta_event_id"), event_source_url=data.get("event_source_url", ""))
-            transaction.on_commit(lambda order_id=order.pk: send_order_placement_notification(order_id))
+        event_id = data.get('meta_event_id')
+        if event_id:
+            existing = Payment.objects.select_related('order').filter(meta_event_id=event_id).first()
+            if existing:
+                return existing_checkout_response(existing, data)
+        try:
+            with transaction.atomic():
+                product_ids = [item['product_id'] for item in data['items']]
+                products_by_id = {product.pk: product for product in Product.objects.select_for_update()
+                                  .filter(pk__in=product_ids, is_active=True).order_by('pk')}
+                if len(products_by_id) != len(product_ids):
+                    return Response({'detail': 'One or more products are no longer available.'}, status=status.HTTP_400_BAD_REQUEST)
+                total = Decimal('0.00')
+                line_items = []
+                for item in data['items']:
+                    product = products_by_id[item['product_id']]
+                    if product.stock_quantity < item['quantity'] or product.price is None:
+                        return Response({'detail': f'{product.name} is unavailable in the requested quantity.'}, status=status.HTTP_400_BAD_REQUEST)
+                    unit_price = product.sale_price if product.sale_price is not None else product.price
+                    line_total = unit_price * item['quantity']
+                    total += line_total
+                    line_items.append((product, item['quantity'], unit_price, line_total))
+                order = Order.objects.create(customer_name=data['customer_name'], email=data['email'],
+                    phone_number=data['phone_number'], notes=data.get('notes', ''), subtotal=total, currency=settings.SHOP_CURRENCY)
+                for product, quantity, unit_price, line_total in line_items:
+                    OrderItem.objects.create(order=order, product=product, product_name=product.name,
+                        product_slug=product.slug, unit_price=unit_price, quantity=quantity, line_total=line_total)
+                # Persist the exact provider reference before any external payment call.
+                payment = Payment.objects.create(order=order, reference_id=uuid.uuid4(), amount=total,
+                    currency=settings.MOMO_CURRENCY, meta_event_id=event_id, provider_status='REQUESTING',
+                    event_source_url=data.get('event_source_url', ''))
+        except IntegrityError:
+            if not event_id:
+                raise
+            existing = Payment.objects.select_related('order').filter(meta_event_id=event_id).first()
+            if not existing:
+                raise
+            return existing_checkout_response(existing, data)
+
+        # No row locks remain during network calls. A retry returns this record;
+        # it never submits another request-to-pay, even after an ambiguous timeout.
+        try:
+            MomoCollectionClient().request_to_pay(amount=total, currency=payment.currency,
+                phone_number=order.phone_number, external_id=order.public_id, reference_id=payment.reference_id)
+        except MomoAmbiguousError:
+            with transaction.atomic():
+                locked_order = Order.objects.select_for_update().get(pk=order.pk)
+                locked_payment = Payment.objects.select_for_update().get(pk=payment.pk)
+                if locked_payment.status == Payment.Status.PENDING and locked_payment.provider_status == 'REQUESTING':
+                    locked_order.status = Order.Status.PAYMENT_REVIEW
+                    locked_order.save(update_fields=['status', 'updated_at'])
+                    locked_payment.provider_status = 'REQUEST_UNKNOWN'
+                    locked_payment.save(update_fields=['provider_status', 'updated_at'])
+        except (MomoConfigurationError, MomoRequestError):
+            # Authentication failure or definitive rejection occurred before an
+            # accepted charge. Never overwrite a concurrent provider success.
+            with transaction.atomic():
+                locked_order = Order.objects.select_for_update().get(pk=order.pk)
+                locked_payment = Payment.objects.select_for_update().get(pk=payment.pk)
+                if locked_payment.status == Payment.Status.PENDING and locked_payment.provider_status == 'REQUESTING':
+                    locked_payment.status = Payment.Status.FAILED
+                    locked_payment.provider_status = 'REQUEST_REJECTED'
+                    locked_payment.save(update_fields=['status', 'provider_status', 'updated_at'])
+                    locked_order.status = Order.Status.PAYMENT_FAILED
+                    locked_order.save(update_fields=['status', 'updated_at'])
+        send_order_placement_notification(order.pk)
         order.refresh_from_db()
         return Response(payment_response(order), status=status.HTTP_201_CREATED)
 

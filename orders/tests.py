@@ -42,7 +42,8 @@ class MomoCheckoutTests(APITestCase):
 
     @patch("orders.momo.requests.get")
     @patch("orders.momo.requests.post")
-    def test_successful_status_marks_order_paid_and_reduces_stock(self, post, get):
+    @patch("orders.views.send_order_placement_notification")
+    def test_successful_status_marks_order_paid_and_reduces_stock(self, notification, post, get):
         token = Mock(ok=True); token.json.return_value = {"access_token": "token"}
         post.side_effect = [token, Mock(status_code=202)]
         created = self.client.post("/api/checkout/momo/", self.payload, format="json")

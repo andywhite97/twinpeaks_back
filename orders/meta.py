@@ -16,7 +16,7 @@ def purchase_payload(payment, request):
     order = payment.order
     user_data = {"em": [_hash(order.email)], "ph": [_hash(order.phone_number)], "client_ip_address": request.META.get("REMOTE_ADDR"), "client_user_agent": request.META.get("HTTP_USER_AGENT")}
     return {"data": [{
-        "event_name": "Purchase", "event_time": int(time.time()), "event_id": str(payment.meta_event_id), "action_source": "website", "event_source_url": payment.event_source_url,
+        "event_name": "Purchase", "event_time": int(time.time()), "event_id": str(payment.meta_event_id), "action_source": "website", "event_source_url": f"{settings.PUBLIC_SITE_URL}/cart",
         "user_data": {key: value for key, value in user_data.items() if value},
         "custom_data": {"currency": order.currency, "value": float(order.subtotal), "content_type": "product", "content_ids": [item.product_slug for item in order.items.all()], "contents": [{"id": item.product_slug, "quantity": item.quantity, "item_price": float(item.unit_price)} for item in order.items.all()]},
     }], "access_token": settings.META_CONVERSIONS_API_ACCESS_TOKEN}
