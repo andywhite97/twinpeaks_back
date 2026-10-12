@@ -2,11 +2,40 @@ import logging
 
 from bird import Bird
 from django.conf import settings
-from django.utils.html import escape
+from django.template.loader import render_to_string
+from django.utils import timezone
+from core.models import CompanyProfile
 
 from .models import ContactMessage, Quotation
 
 logger = logging.getLogger(__name__)
+
+
+def render_email(template: str, subject: str, context: dict, *, quotation_sender: bool = False) -> tuple[str, str]:
+    """Render both formats from one context; Django escapes untrusted HTML."""
+    company = context["company"] if "company" in context else CompanyProfile.objects.first()
+    context = {
+        **context,
+        "subject": subject,
+        "site_url": settings.PUBLIC_SITE_URL.rstrip("/"),
+        "support_email": settings.QUOTATION_FROM_EMAIL if quotation_sender else settings.CONTACT_FROM_EMAIL,
+        "year": timezone.localdate().year,
+        "assets_url": getattr(settings, "EMAIL_ASSET_BASE_URL", settings.PUBLIC_SITE_URL + "/assets/email").rstrip("/"),
+        "company": company,
+        "contact_url": settings.PUBLIC_SITE_URL.rstrip("/") + "/contact",
+        "banner_image": "technology.jpg" if template in {"quote_issued", "general"} else "security.jpg" if template in {"quote_acknowledgement", "quote_internal"} else "workplace.jpg",
+    }
+    stem = f"contact/emails/{template}"
+    return render_to_string(f"{stem}.html", context), render_to_string(f"{stem}.txt", context).strip()
+
+
+def _send(client: Bird, subject: str, template: str, context: dict, recipients: list[str], *, quotation_sender: bool = False) -> None:
+    sender = (
+        {"email": settings.QUOTATION_FROM_EMAIL, "name": settings.QUOTATION_FROM_NAME}
+        if quotation_sender else {"email": settings.CONTACT_FROM_EMAIL, "name": settings.CONTACT_FROM_NAME}
+    )
+    html, text = render_email(template, subject, context, quotation_sender=quotation_sender)
+    client.email.send(from_=sender, to=recipients, subject=subject, html=html, text=text)
 
 
 def send_contact_message_notification(message: ContactMessage) -> None:
@@ -23,38 +52,11 @@ def send_contact_message_notification(message: ContactMessage) -> None:
 
 
 def _send_customer_acknowledgement(client: Bird, message: ContactMessage) -> None:
-    subject = "We received your message | TwinPeaks Investment"
-    html_body = (
-        f"<p>Hello {escape(message.name)},</p>"
-        "<p>Thank you for contacting <strong>TwinPeaks Investment</strong>. "
-        "We have received your message and a member of our team will contact you "
-        "shortly with further support.</p>"
-        "<p>Kind regards,<br>TwinPeaks Investment</p>"
-    )
-    _send(client, subject, html_body, [message.email])
+    _send(client, "We received your message | TwinPeaks Investment", "contact_acknowledgement", {"message": message}, [message.email])
 
 
 def _send_internal_notification(client: Bird, message: ContactMessage) -> None:
-    subject = f"New website contact message from {message.name}"
-    html_body = (
-        f"<p><strong>Name:</strong> {escape(message.name)}<br>"
-        f"<strong>Email:</strong> {escape(message.email)}</p>"
-        f"<p><strong>Message:</strong><br>{escape(message.message).replace(chr(10), '<br>')}</p>"
-    )
-    _send(client, subject, html_body, [settings.CONTACT_NOTIFICATION_EMAIL])
-
-
-def _send(client: Bird, subject: str, html_body: str, recipients: list[str], *, quotation_sender: bool = False) -> None:
-    sender = (
-        {"email": settings.QUOTATION_FROM_EMAIL, "name": settings.QUOTATION_FROM_NAME}
-        if quotation_sender else {"email": settings.CONTACT_FROM_EMAIL, "name": settings.CONTACT_FROM_NAME}
-    )
-    client.email.send(
-        from_=sender,
-        to=recipients,
-        subject=subject,
-        html=html_body,
-    )
+    _send(client, f"New website contact message from {message.name}", "contact_internal", {"message": message}, [settings.CONTACT_NOTIFICATION_EMAIL])
 
 
 def send_quotation_request_notification(quotation_id: int) -> None:
@@ -68,37 +70,23 @@ def send_quotation_request_notification(quotation_id: int) -> None:
         logger.exception("Unable to send quote emails for quotation %s", quotation_id)
 
 
-def _send_quote_acknowledgement(client: Bird, quote_request: Quotation) -> None:
-    subject = "We received your quote request | TwinPeaks Investment"
-    requested_items = ", ".join(escape(item.title) for item in quote_request.items.all())
-    html_body = (
-        f"<p>Hello {escape(quote_request.name)},</p>"
-        f"<p>Thank you for requesting a quote{f' for <strong>{requested_items}</strong>' if requested_items else ''}. We have received your request "
-        "and a member of our team will contact you shortly with further support.</p>"
-        "<p>Kind regards,<br>TwinPeaks Investment</p>"
-    )
-    _send(client, subject, html_body, [quote_request.email], quotation_sender=True)
+def _send_quote_acknowledgement(client: Bird, quotation: Quotation) -> None:
+    _send(client, "We received your quote request | TwinPeaks Investment", "quote_acknowledgement",
+          {"quotation": quotation, "items": list(quotation.items.all())}, [quotation.email], quotation_sender=True)
 
 
-def _send_quote_internal_notification(client: Bird, quote_request: Quotation) -> None:
-    subject = f"New quote request from {quote_request.name}"
-    product = ", ".join(escape(item.title) for item in quote_request.items.all())
-    html_body = (
-        f"<p><strong>Quote for:</strong> {product}<br>"
-        f"<strong>Name:</strong> {escape(quote_request.name)}<br>"
-        f"<strong>Email:</strong> {escape(quote_request.email)}<br>"
-        f"<strong>Phone:</strong> {escape(quote_request.phone_number)}</p>"
-        f"<p><strong>Requirements:</strong><br>{escape(quote_request.message).replace(chr(10), '<br>')}</p>"
-    )
-    _send(client, subject, html_body, [settings.QUOTE_NOTIFICATION_EMAIL])
+def _send_quote_internal_notification(client: Bird, quotation: Quotation) -> None:
+    _send(client, f"New quote request from {quotation.name}", "quote_internal",
+          {"quotation": quotation, "items": list(quotation.items.all())}, [settings.QUOTE_NOTIFICATION_EMAIL])
 
 
 def send_quotation_accepted_notification(quotation_id: int) -> None:
     try:
         quotation = Quotation.objects.get(pk=quotation_id)
+        context = {"quotation": quotation}
         with Bird() as client:
-            _send(client, f"Quotation {quotation.quote_number} accepted", f"<p>Hello {escape(quotation.name)},</p><p>Thank you for accepting quotation <strong>{quotation.quote_number}</strong>. Our team will contact you about the next steps.</p>", [quotation.email], quotation_sender=True)
-            _send(client, f"Quotation accepted: {quotation.quote_number}", f"<p>{escape(quotation.name)} accepted quotation <strong>{quotation.quote_number}</strong>.</p>", [settings.QUOTE_NOTIFICATION_EMAIL])
+            _send(client, f"Quotation {quotation.quote_number} accepted", "quote_accepted", context, [quotation.email], quotation_sender=True)
+            _send(client, f"Quotation accepted: {quotation.quote_number}", "quote_accepted_internal", context, [settings.QUOTE_NOTIFICATION_EMAIL])
     except Exception:
         logger.exception("Unable to send acceptance emails for quotation %s", quotation_id)
 
@@ -106,8 +94,23 @@ def send_quotation_accepted_notification(quotation_id: int) -> None:
 def send_quotation_issued_notification(quotation_id: int) -> None:
     try:
         quotation = Quotation.objects.get(pk=quotation_id)
-        quote_url = f"{settings.PUBLIC_SITE_URL}/quotations/{quotation.public_access_token}"
+        context = {
+            "quotation": quotation,
+            "quotation_url": f"{settings.PUBLIC_SITE_URL.rstrip('/')}/quotations/{quotation.public_access_token}",
+            "quotation_pdf_url": f"{getattr(settings, 'PUBLIC_API_URL', 'https://backend.twinpeaksinvestment.com').rstrip('/')}/api/quotations/public/{quotation.public_access_token}/pdf/",
+        }
         with Bird() as client:
-            _send(client, f"Your quotation {quotation.quote_number} | TwinPeaks Investment", f"<p>Hello {escape(quotation.name)},</p><p>Your quotation <strong>{quotation.quote_number}</strong> is ready.</p><p><a href=\"{quote_url}\">View your quotation securely</a></p><p>This quotation is valid until {quotation.valid_until}.</p>", [quotation.email], quotation_sender=True)
+            _send(client, f"Your quotation {quotation.quote_number} | TwinPeaks Investment", "quote_issued", context, [quotation.email], quotation_sender=True)
     except Exception:
         logger.exception("Unable to send issued quotation email for %s", quotation_id)
+
+
+def send_quotation_declined_notification(quotation_id: int) -> None:
+    try:
+        quotation = Quotation.objects.get(pk=quotation_id)
+        context = {"quotation": quotation}
+        with Bird() as client:
+            _send(client, f"Quotation {quotation.quote_number} — response received", "quote_declined", context, [quotation.email], quotation_sender=True)
+            _send(client, f"Quotation declined: {quotation.quote_number}", "quote_declined_internal", context, [settings.QUOTE_NOTIFICATION_EMAIL])
+    except Exception:
+        logger.exception("Unable to send decline emails for quotation %s", quotation_id)

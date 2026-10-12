@@ -1,0 +1,14 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}A new website enquiry needs your attention.{% endblock %}
+{% block eyebrow %}Team notification{% endblock %}
+{% block heading %}New website enquiry.{% endblock %}
+{% block content %}
+<p style="margin:0 0 20px;">A visitor has submitted a message through the website.</p>
+<table class="email-panel" role="presentation" width="100%" cellpadding="12" cellspacing="0" style="background-color:#EEF5FD;font-size:15px;line-height:24px;">
+<tr><td><strong>Name</strong><br>{{ message.name }}</td></tr>
+<tr><td style="border-top:1px solid #DCE7F2;"><strong>Email</strong><br>{{ message.email }}</td></tr>
+</table>
+<h2 style="font-size:18px;margin:24px 0 8px;">Message</h2>
+<div style="overflow-wrap:anywhere;">{{ message.message|linebreaksbr }}</div>
+{% endblock %}
+{% block signature %}{% endblock %}

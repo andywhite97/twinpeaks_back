@@ -1,0 +1,11 @@
+{% autoescape off %}TwinPeaks Investment
+Technology · Security · Digital Solutions
+
+{% block content %}{% endblock %}
+{% block signature %}Kind regards,
+TwinPeaks Investment
+{% endblock %}
+Questions? Email {{ support_email }}
+{{ site_url }}
+© {{ year }} TwinPeaks Investment
+{% endautoescape %}

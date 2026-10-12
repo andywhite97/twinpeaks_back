@@ -1,0 +1,10 @@
+{% extends "contact/emails/quote_accepted.html" %}
+{% block preheader %}Your response has been recorded. Contact us if you would like to discuss a revised scope.{% endblock %}
+{% block eyebrow %}Quotation decision · {{ quotation.quote_number }}{% endblock %}
+{% block content %}
+<p style="margin:0 0 16px;">Hello {{ quotation.name }},</p>
+<p style="margin:0 0 24px;">We have recorded your decision to decline quotation <strong>{{ quotation.quote_number }}</strong>.</p>
+<p class="email-panel email-accent" style="margin:0;padding:18px;background:#EEF5FD;border-radius:8px;color:#0B3D91;">Quotation reference<br><strong>{{ quotation.quote_number }}</strong><br>Your response: <strong>Declined</strong>{% if quotation.declined_at %}<br><span class="email-muted" style="color:#5B7191;font-size:13px;">Received on {{ quotation.declined_at|date:"j F Y" }}</span>{% endif %}</p>
+<p style="margin:24px 0 0;">Thank you for letting us know. If your requirements change or you would like to discuss a revised scope, please contact our team.</p>
+{% include "contact/emails/contact_button.html" %}
+{% endblock %}

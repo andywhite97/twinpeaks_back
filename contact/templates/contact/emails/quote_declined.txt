@@ -1,0 +1,8 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Hello {{ quotation.name }},
+
+We have recorded your decision to decline quotation {{ quotation.quote_number }}.
+Your response: Declined
+
+Thank you for letting us know. If your requirements change or you would like to discuss a revised scope, please contact our team.
+Contact us: {{ contact_url }}
+{% endblock %}

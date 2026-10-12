@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>{{ subject }}</title>
+<style>
+:root { color-scheme: light dark; supported-color-schemes: light dark; }
+/* Inline colours remain the fallback when a client removes head styles. */
+.email-content { color:#082447; background-color:#FFFFFF; }
+.logo-plate { background-color:#FFFFFF; background-image:linear-gradient(#FFFFFF,#FFFFFF); }
+@media (prefers-color-scheme: dark) {
+  .email-body { background-color:#071525 !important; color:#E5F2FF !important; }
+  .email-surface, .email-content { background-color:#10263F !important; color:#E5F2FF !important; border-color:#27445F !important; }
+  .email-panel { background-color:#18344F !important; color:#E5F2FF !important; border-color:#27445F !important; }
+  .email-accent, .email-link { color:#85C9FF !important; }
+  .email-muted { color:#B9C9DB !important; }
+  .email-success { background-color:#103D32 !important; color:#BFF2DC !important; }
+  .email-button { background-color:#0B3D91 !important; color:#FFFFFF !important; border-color:#85C9FF !important; }
+  .email-outline { background-color:#10263F !important; color:#85C9FF !important; border-color:#85C9FF !important; }
+  .brand-header { background-color:#10263F !important; }
+  .brand-label { color:#E5F2FF !important; }
+}
+/* Outlook clients that expose their automatic dark-mode attributes. */
+[data-ogsc] .email-body, [data-ogsb] .email-body { background-color:#071525 !important; color:#E5F2FF !important; }
+[data-ogsc] .email-surface, [data-ogsc] .email-content, [data-ogsb] .email-surface, [data-ogsb] .email-content { background-color:#10263F !important; color:#E5F2FF !important; border-color:#27445F !important; }
+[data-ogsc] .email-panel, [data-ogsb] .email-panel { background-color:#18344F !important; color:#E5F2FF !important; border-color:#27445F !important; }
+[data-ogsc] .email-accent, [data-ogsc] .email-link, [data-ogsb] .email-accent, [data-ogsb] .email-link { color:#85C9FF !important; }
+[data-ogsc] .email-muted, [data-ogsb] .email-muted { color:#B9C9DB !important; }
+[data-ogsc] .email-success, [data-ogsb] .email-success { background-color:#103D32 !important; color:#BFF2DC !important; }
+[data-ogsc] .email-button, [data-ogsb] .email-button { background-color:#0B3D91 !important; color:#FFFFFF !important; border-color:#85C9FF !important; }
+[data-ogsc] .email-outline, [data-ogsb] .email-outline { background-color:#10263F !important; color:#85C9FF !important; border-color:#85C9FF !important; }
+[data-ogsc] .brand-header, [data-ogsb] .brand-header { background-color:#10263F !important; }
+[data-ogsc] .brand-label, [data-ogsb] .brand-label { color:#E5F2FF !important; }
+</style></head>
+<body class="email-body" bgcolor="#F6F9FD" style="margin:0;padding:0;background-color:#F6F9FD;color:#082447;font-family:Arial,Helvetica,sans-serif;">
+<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">{% block preheader %}{% endblock %}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:24px 10px;">
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
+<table class="email-surface" bgcolor="#FFFFFF" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFFFF;color:#082447;border:1px solid #E5EAF0;border-radius:10px;">
+<tr><td class="brand-header" bgcolor="#FFFFFF" style="padding:28px 24px;background-color:#FFFFFF;border-radius:10px 10px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="72%"><table role="presentation" cellpadding="8" cellspacing="0"><tr><td class="logo-plate" bgcolor="#FFFFFF" style="background-color:#FFFFFF;background-image:linear-gradient(#FFFFFF,#FFFFFF);border-radius:4px;"><a href="{{ site_url }}"><img src="{{ assets_url }}/logo.png" width="250" alt="TwinPeaks Investment" style="display:block;width:100%;max-width:250px;height:auto;border:0;color:#082447;background-color:#FFFFFF;background-image:linear-gradient(#FFFFFF,#FFFFFF);"></a></td></tr></table></td><td class="brand-label" align="right" style="font-size:10px;line-height:16px;color:#082447;">Technology<br>Security<br>Digital Solutions</td></tr></table></td></tr>
+<tr><td bgcolor="#031E36" background="{{ assets_url }}/{{ banner_image }}" style="background-color:#031E36;background-image:url('{{ assets_url }}/{{ banner_image }}');background-size:cover;background-position:center right;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="70%" bgcolor="#032744" style="padding:28px 22px;color:#FFFFFF;background-color:#032744;">
+<p style="margin:0 0 14px;color:#8DD7FF;font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">{% block eyebrow %}TwinPeaks Investment{% endblock %}</p>
+<h1 style="margin:0;font-size:28px;line-height:33px;color:#FFFFFF;">{% block heading %}{% endblock %}</h1>
+<p style="margin:14px 0 0;color:#E5F2FF;font-size:14px;line-height:22px;">{% block banner_copy %}Technology, security and digital solutions for a more connected Eswatini.{% endblock %}</p>
+</td><td width="30%">&nbsp;</td></tr></table></td></tr>
+<tr><td class="email-content" bgcolor="#FFFFFF" style="padding:30px 24px;font-size:15px;line-height:24px;background-color:#FFFFFF;color:#082447;">
+{% block content %}{% endblock %}
+{% block signature %}<p style="margin:28px 0 0;">Kind regards,<br><strong class="email-accent" style="color:#0B3D91;">TwinPeaks Investment Team</strong><br><span class="email-muted" style="color:#5B7191;font-size:13px;">Built on Vision, Driven by Progress.</span></p>{% endblock %}
+</td></tr>
+<tr><td bgcolor="#031E36" style="padding:28px 24px;color:#E5F2FF;background:#031E36;border-radius:0 0 10px 10px;">
+<p style="margin:0 0 22px;font-size:23px;font-weight:bold;letter-spacing:1px;text-align:center;color:#FFFFFF;">TWINPEAKS<br><span style="font-size:10px;letter-spacing:4px;font-weight:normal;">INVESTMENT</span></p>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="font-size:13px;line-height:22px;color:#E5F2FF;">
+{% if company.phone %}<tr><td width="26" style="color:#00B4D8;">&#9742;</td><td>{{ company.phone }}</td></tr>{% endif %}
+<tr><td width="26" style="color:#00B4D8;">&#9993;</td><td><a href="mailto:{{ support_email }}" style="color:#E5F2FF;text-decoration:none;">{{ support_email }}</a></td></tr>
+{% if company.address %}<tr><td width="26" valign="top" style="color:#00B4D8;">&#9679;</td><td>{{ company.address|linebreaksbr }}</td></tr>{% endif %}
+<tr><td width="26" style="color:#00B4D8;">&#8853;</td><td><a href="{{ site_url }}" style="color:#E5F2FF;text-decoration:none;">{{ site_url }}</a></td></tr></table>
+<p style="margin:20px 0 0;padding-top:14px;border-top:1px solid #0872AD;text-align:center;font-size:10px;line-height:16px;">This email is intended for the recipient only. If you received it in error, please let us know and delete it.</p>
+<p style="margin:8px 0 0;text-align:center;font-size:10px;color:#A8BDD5;">&copy; {{ year }} TwinPeaks Investment</p>
+</td></tr></table>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr></table></body></html>

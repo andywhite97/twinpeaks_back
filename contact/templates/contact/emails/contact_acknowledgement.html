@@ -1,0 +1,12 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}Your message is with our team. We will be in touch shortly.{% endblock %}
+{% block eyebrow %}Message received{% endblock %}
+{% block heading %}Thank you<br>for your enquiry!{% endblock %}
+{% block banner_copy %}We’ve received your message and our team will be in touch shortly.{% endblock %}
+{% block content %}
+<p style="margin:0 0 16px;">Hello {{ message.name }},</p>
+<p style="margin:0 0 16px;">Thank you for contacting TwinPeaks Investment. We have received your message and a member of our team will contact you shortly with further support.</p>
+<p class="email-muted" style="margin:0;color:#405670;">If you have anything to add, you can reach us at the email address below.</p>
+<p class="email-panel email-accent" style="margin:24px 0;padding:18px;background:#EEF5FD;border-radius:8px;color:#0B3D91;">Enquiry reference<br><strong>TP-ENQ-{{ message.pk|stringformat:"06d" }}</strong><br><span class="email-muted" style="font-size:13px;color:#5B7191;">Submitted on {{ message.created_at|date:"j F Y" }}</span></p>
+{% include "contact/emails/contact_button.html" %}
+{% endblock %}

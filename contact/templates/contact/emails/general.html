@@ -1,0 +1,9 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}{{ subject }}{% endblock %}
+{% block heading %}Built on Vision,<br><span style="color:#00B4D8;">Driven by Progress.</span>{% endblock %}
+{% block content %}
+<p style="margin:0 0 18px;">Dear {{ name }},</p>
+<div style="overflow-wrap:anywhere;">{{ email_content|linebreaksbr }}</div>
+{% include "contact/emails/contact_button.html" %}
+<table class="email-accent" role="presentation" width="100%" cellpadding="8" cellspacing="6" style="margin:28px 0 0;font-size:11px;line-height:17px;text-align:center;color:#0B3D91;"><tr><td class="email-panel" width="25%" bgcolor="#EEF5FD" style="border-radius:8px;padding:18px 6px;">Security<br>Systems</td><td class="email-panel" width="25%" bgcolor="#EEF5FD" style="border-radius:8px;">IT &amp;<br>Networking</td><td class="email-panel" width="25%" bgcolor="#EEF5FD" style="border-radius:8px;">Web &amp; App<br>Development</td><td class="email-panel" width="25%" bgcolor="#EEF5FD" style="border-radius:8px;">POS<br>Solutions</td></tr></table>
+{% endblock %}

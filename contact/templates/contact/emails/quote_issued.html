@@ -1,0 +1,15 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}Your quotation is ready to view and respond to securely.{% endblock %}
+{% block eyebrow %}Quotation · {{ quotation.quote_number }}{% endblock %}
+{% block heading %}Your quotation is ready.{% endblock %}
+{% block banner_copy %}Review your quotation online or download the full document.{% endblock %}
+{% block content %}
+<p style="margin:0 0 16px;">Hello {{ quotation.name }},</p>
+<p style="margin:0 0 24px;">Your quotation <strong>{{ quotation.quote_number }}</strong> is ready. Review the scope, pricing and terms, then accept or decline using your private quotation page.</p>
+<table class="email-panel" role="presentation" width="100%" cellpadding="16" cellspacing="0" style="background-color:#EEF5FD;font-size:16px;line-height:26px;"><tr><td><strong>Quotation total</strong><br><span class="email-accent" style="font-size:24px;color:#0B3D91;font-weight:bold;">{{ quotation.currency }} {{ quotation.total|floatformat:2 }}</span>{% if quotation.valid_until %}<br><span class="email-muted" style="color:#405670;">Valid until {{ quotation.valid_until|date:"j F Y" }}</span>{% endif %}</td></tr></table>
+<p class="email-accent" style="margin:18px 0 0;color:#0B3D91;font-size:14px;">Quotation reference: <strong>{{ quotation.quote_number }}</strong></p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;"><tr><td class="email-button" bgcolor="#0B3D91" style="border-radius:6px;text-align:center;"><a class="email-button" href="{{ quotation_url }}" style="display:inline-block;padding:16px 24px;border:1px solid #0B3D91;border-radius:6px;color:#FFFFFF;background-color:#0B3D91;text-decoration:none;font-weight:bold;">View your quotation</a></td></tr></table>
+{% if quotation_pdf_url %}<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td class="email-outline" style="border:1px solid #006BEF;border-radius:6px;text-align:center;"><a class="email-outline" href="{{ quotation_pdf_url }}" style="display:inline-block;padding:13px 24px;color:#0B3D91;text-decoration:none;font-size:14px;font-weight:bold;">Download PDF &nbsp; &#8594;</a></td></tr></table>{% endif %}
+<p class="email-muted" style="margin:0;color:#405670;font-size:13px;line-height:21px;">This link gives access to your private quotation. Please keep it private. If the button does not work, copy this address into your browser:</p>
+<p style="margin:8px 0 0;font-size:13px;line-height:21px;overflow-wrap:anywhere;word-break:break-all;"><a class="email-link" href="{{ quotation_url }}" style="color:#0B3D91;">{{ quotation_url }}</a></p>
+{% endblock %}

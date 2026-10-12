@@ -266,6 +266,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # Canonical frontend domain used by public links and the sitemap.
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://twinpeaksinvestment.com").rstrip("/")
+PUBLIC_API_URL = os.getenv("PUBLIC_API_URL", "https://backend.twinpeaksinvestment.com").rstrip("/")
+EMAIL_ASSET_BASE_URL = os.getenv("EMAIL_ASSET_BASE_URL", f"{PUBLIC_SITE_URL}/assets/email").rstrip("/")
 
 # Celery configuration
 # In production, set CELERY_BROKER_URL to a real broker such as Redis or RabbitMQ.

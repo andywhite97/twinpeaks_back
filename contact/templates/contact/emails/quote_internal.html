@@ -1,0 +1,11 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}A new quotation request is ready for review.{% endblock %}
+{% block eyebrow %}Team notification · {{ quotation.quote_number }}{% endblock %}
+{% block heading %}New quote request.{% endblock %}
+{% block content %}
+<p style="margin:0 0 24px;"><strong>Name:</strong> {{ quotation.name }}<br>{% if quotation.company_name %}<strong>Company:</strong> {{ quotation.company_name }}<br>{% endif %}<strong>Email:</strong> {{ quotation.email }}<br><strong>Phone:</strong> {{ quotation.phone_number }}</p>
+{% include "contact/emails/quote_items.html" %}
+{% if quotation.message %}<h2 style="font-size:18px;margin:24px 0 8px;">Requirements</h2><div style="overflow-wrap:anywhere;">{{ quotation.message|linebreaksbr }}</div>{% endif %}
+{% if quotation.address %}<p style="margin:24px 0 0;"><strong>Address:</strong><br>{{ quotation.address|linebreaksbr }}</p>{% endif %}
+{% endblock %}
+{% block signature %}{% endblock %}

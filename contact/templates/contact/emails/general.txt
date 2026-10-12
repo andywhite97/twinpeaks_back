@@ -1,0 +1,6 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Dear {{ name }},
+
+{{ email_content }}
+
+Contact us: {{ contact_url }}
+{% endblock %}

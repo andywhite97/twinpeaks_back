@@ -1,0 +1,14 @@
+{% extends "contact/emails/base.txt" %}{% block content %}New quote request: {{ quotation.quote_number }}
+
+Name: {{ quotation.name }}
+{% if quotation.company_name %}Company: {{ quotation.company_name }}
+{% endif %}Email: {{ quotation.email }}
+Phone: {{ quotation.phone_number }}
+{% if quotation.address %}Address: {{ quotation.address }}
+{% endif %}
+Requested solutions:
+{% for item in items %}- {{ item.title }} (quantity: {{ item.quantity }})
+{% endfor %}
+Requirements:
+{{ quotation.message }}
+{% endblock %}{% block signature %}{% endblock %}

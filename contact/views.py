@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 
 from .models import ContactMessage, Quotation
 from .serializers import ContactMessageSerializer, PublicQuotationSerializer, QuotationRequestSerializer
-from .tasks import send_contact_message_notification, send_quotation_accepted_notification, send_quotation_request_notification
+from .tasks import send_contact_message_notification, send_quotation_accepted_notification, send_quotation_declined_notification, send_quotation_request_notification
 
 class ContactMessageCreateView(CreateAPIView):
     queryset = ContactMessage.objects.all(); serializer_class = ContactMessageSerializer; permission_classes = [AllowAny]; throttle_classes = [AnonRateThrottle]
@@ -52,6 +52,7 @@ class PublicQuotationDecisionView(APIView):
                 transaction.on_commit(lambda: send_quotation_accepted_notification(quotation.pk))
             else:
                 quotation.status = Quotation.Status.DECLINED; quotation.declined_at = timezone.now(); quotation.decline_reason = request.data.get("reason", "")[:500]; quotation.save(update_fields=["status", "declined_at", "decline_reason", "updated_at"])
+                transaction.on_commit(lambda: send_quotation_declined_notification(quotation.pk))
         return Response(PublicQuotationSerializer(quotation).data)
 
 class PublicQuotationPdfView(APIView):

@@ -1,0 +1,13 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Hello {{ quotation.name }},
+
+Your quotation {{ quotation.quote_number }} is ready. Review the scope, pricing and terms, then accept or decline using your private quotation page.
+
+Quotation total: {{ quotation.currency }} {{ quotation.total|floatformat:2 }}
+{% if quotation.valid_until %}Valid until {{ quotation.valid_until|date:"j F Y" }}
+{% endif %}
+View your quotation: {{ quotation_url }}
+{% if quotation_pdf_url %}Download PDF: {{ quotation_pdf_url }}
+{% endif %}
+
+This link gives access to your private quotation. Please keep it private.
+{% endblock %}

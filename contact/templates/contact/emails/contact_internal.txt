@@ -1,0 +1,8 @@
+{% extends "contact/emails/base.txt" %}{% block content %}New website enquiry
+
+Name: {{ message.name }}
+Email: {{ message.email }}
+
+Message:
+{{ message.message }}
+{% endblock %}{% block signature %}{% endblock %}

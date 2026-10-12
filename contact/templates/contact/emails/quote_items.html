@@ -1,0 +1,5 @@
+{% if items %}
+<table class="email-panel" role="presentation" width="100%" cellpadding="12" cellspacing="0" style="background-color:#EEF5FD;font-size:15px;line-height:24px;">
+{% for item in items %}<tr><td style="{% if not forloop.first %}border-top:1px solid #DCE7F2;{% endif %}"><strong>{{ item.title }}</strong><br><span class="email-muted" style="color:#405670;">Quantity: {{ item.quantity }}</span></td></tr>{% endfor %}
+</table>
+{% endif %}

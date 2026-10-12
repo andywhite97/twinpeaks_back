@@ -1,0 +1,9 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Quotation accepted: {{ quotation.quote_number }}
+
+{{ quotation.name }} accepted quotation {{ quotation.quote_number }}.
+Email: {{ quotation.email }}
+Phone: {{ quotation.phone_number }}
+{% if quotation.company_name %}Company: {{ quotation.company_name }}
+{% endif %}
+Contact the customer to arrange the next steps.
+{% endblock %}{% block signature %}{% endblock %}

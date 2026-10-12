@@ -1,0 +1,6 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Hello {{ message.name }},
+
+Thank you for contacting TwinPeaks Investment. We have received your message and a member of our team will contact you shortly with further support.
+
+If you have anything to add, email {{ support_email }}.
+{% endblock %}

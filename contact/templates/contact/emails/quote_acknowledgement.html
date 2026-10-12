@@ -1,0 +1,15 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}Your quote request has been received. Our team will review your requirements.{% endblock %}
+{% block eyebrow %}Quote request · {{ quotation.quote_number }}{% endblock %}
+{% block heading %}Quotation request<br>received.{% endblock %}
+{% block banner_copy %}Thank you for requesting a quotation. We’ll prepare a tailored proposal based on your requirements.{% endblock %}
+{% block content %}
+<p style="margin:0 0 16px;">Hello {{ quotation.name }},</p>
+<p style="margin:0 0 24px;">Thank you for requesting a quote. We have received your request and a member of our team will contact you shortly to discuss your requirements.</p>
+{% include "contact/emails/quote_items.html" %}
+<p class="email-muted" style="margin:20px 0 0;color:#405670;">Please use reference <strong>{{ quotation.quote_number }}</strong> when contacting us about this request.</p>
+<p class="email-panel email-accent" style="margin:20px 0;padding:18px;background:#EEF5FD;border-radius:8px;color:#0B3D91;">Quotation request reference<br><strong>{{ quotation.quote_number }}</strong><br><span class="email-muted" style="font-size:13px;color:#5B7191;">Submitted on {{ quotation.created_at|date:"j F Y" }}</span></p>
+<h2 style="font-size:18px;margin:24px 0 14px;">What happens next?</h2>
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="font-size:14px;line-height:22px;"><tr><td width="34" valign="top" style="color:#006BEF;font-weight:bold;">1.</td><td style="padding-bottom:16px;"><strong>Review</strong><br>Our team reviews your requirements.</td></tr><tr><td valign="top" style="color:#006BEF;font-weight:bold;">2.</td><td style="padding-bottom:16px;"><strong>Consultation</strong><br>We may contact you for additional details or a site assessment.</td></tr><tr><td valign="top" style="color:#006BEF;font-weight:bold;">3.</td><td><strong>Quotation</strong><br>You will receive a detailed quotation by email.</td></tr></table>
+{% include "contact/emails/contact_button.html" %}
+{% endblock %}

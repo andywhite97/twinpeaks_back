@@ -1,0 +1,10 @@
+{% extends "contact/emails/base.html" %}
+{% block eyebrow %}Team notification{% endblock %}
+{% block heading %}Quotation declined.{% endblock %}
+{% block banner_copy %}A customer has responded to their quotation.{% endblock %}
+{% block content %}
+<p style="margin:0 0 24px;"><strong>{{ quotation.name }}</strong> declined quotation <strong>{{ quotation.quote_number }}</strong>.</p>
+<p class="email-panel" style="margin:0;padding:16px;background:#EEF5FD;"><strong>Email:</strong> {{ quotation.email }}<br><strong>Phone:</strong> {{ quotation.phone_number }}</p>
+{% if quotation.decline_reason %}<h2 style="font-size:18px;margin:24px 0 8px;">Customer’s reason</h2><div>{{ quotation.decline_reason|linebreaksbr }}</div>{% endif %}
+{% endblock %}
+{% block signature %}{% endblock %}

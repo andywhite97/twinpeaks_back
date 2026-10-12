@@ -1,0 +1,12 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}Your acceptance is confirmed. Our team will contact you about the next steps.{% endblock %}
+{% block eyebrow %}Quotation accepted · {{ quotation.quote_number }}{% endblock %}
+{% block heading %}Quotation decision<br>received.{% endblock %}
+{% block banner_copy %}Thank you for letting us know. We’ve recorded your response.{% endblock %}
+{% block content %}
+<p style="margin:0 0 16px;">Hello {{ quotation.name }},</p>
+<p style="margin:0 0 24px;">Thank you for accepting quotation <strong>{{ quotation.quote_number }}</strong>. Our team will contact you about the next steps.</p>
+<p class="email-panel email-accent" style="margin:0;padding:18px;background-color:#EEF5FD;border-radius:8px;color:#0B3D91;">Quotation reference<br><strong>{{ quotation.quote_number }}</strong><br>Your response: <strong>Accepted</strong>{% if quotation.accepted_at %}<br><span class="email-muted" style="color:#5B7191;font-size:13px;">Received on {{ quotation.accepted_at|date:"j F Y" }}</span>{% endif %}</p>
+<p class="email-success" style="margin:20px 0 0;padding:16px;background:#E5F6EF;border-radius:8px;color:#087A4E;"><strong>Thank you!</strong><br>We appreciate your response. Our team will be in touch with the next steps.</p>
+{% include "contact/emails/contact_button.html" %}
+{% endblock %}

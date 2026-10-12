@@ -1,0 +1,7 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Hello {{ quotation.name }},
+
+Thank you for requesting a quote. We have received your request and a member of our team will contact you shortly to discuss your requirements.
+
+Reference: {{ quotation.quote_number }}
+{% for item in items %}- {{ item.title }} (quantity: {{ item.quantity }})
+{% endfor %}{% endblock %}

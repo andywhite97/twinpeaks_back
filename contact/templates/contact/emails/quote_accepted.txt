@@ -1,0 +1,7 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Hello {{ quotation.name }},
+
+Thank you for accepting quotation {{ quotation.quote_number }}. Our team will contact you about the next steps.
+
+Reference: {{ quotation.quote_number }}
+Status: Accepted
+{% endblock %}

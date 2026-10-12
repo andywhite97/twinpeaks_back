@@ -1,0 +1,7 @@
+{% extends "contact/emails/base.txt" %}{% block content %}Quotation declined: {{ quotation.quote_number }}
+
+{{ quotation.name }} declined quotation {{ quotation.quote_number }}.
+Email: {{ quotation.email }}
+Phone: {{ quotation.phone_number }}
+{% if quotation.decline_reason %}Customer’s reason: {{ quotation.decline_reason }}
+{% endif %}{% endblock %}{% block signature %}{% endblock %}
