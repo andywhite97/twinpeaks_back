@@ -38,6 +38,8 @@ urlpatterns = [
     path('api/', include('services.urls')),
     path('api/', include('contact.urls')),
     path("api/", include("homepage.urls")),
+    path("api/blog/", include("blog.urls")),
+    path("api/newsletter/", include("newsletter.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

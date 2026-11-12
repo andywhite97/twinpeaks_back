@@ -62,6 +62,8 @@ INSTALLED_APPS = [
     'products',
     'gallery',
     'homepage',
+    'blog',
+    'newsletter',
     'orders',
 ]
 
