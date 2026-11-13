@@ -75,3 +75,35 @@ class NewsletterEmailTests(TestCase):
         html, _ = render_email('general', 'Test', {'company': None, 'name': 'Alex', 'email_content': 'Hello'})
         self.assertIn('width="250"', html)
         self.assertIn('intended for the recipient only', html)
+
+    @override_settings(NEWSLETTER_EMAIL_PROVIDER='bird', BIRD_API_KEY='synthetic-test-key')
+    @patch('newsletter.management.commands.send_newsletter_confirmations.Bird')
+    def test_bird_delivery_is_recipient_scoped_and_not_repeated(self, bird):
+        self.subscriber.status = 'pending'
+        self.subscriber.save()
+        item = ConfirmationEmail.objects.create(subscriber=self.subscriber, token_version=self.subscriber.token_version)
+        other = Subscriber.objects.create(email='other@example.invalid', requested_at=timezone.now())
+        untouched = ConfirmationEmail.objects.create(subscriber=other, token_version=other.token_version)
+        for _ in range(2):
+            call_command('send_newsletter_confirmations', recipient=self.subscriber.email, stdout=StringIO())
+        sender = bird.return_value.__enter__.return_value.email.send
+        sender.assert_called_once()
+        self.assertEqual(sender.call_args.kwargs['to'], [self.subscriber.email])
+        self.assertFalse(sender.call_args.kwargs['track_clicks'])
+        self.assertIn('Confirm my subscription', sender.call_args.kwargs['html'])
+        item.refresh_from_db()
+        untouched.refresh_from_db()
+        self.assertIsNotNone(item.sent_at)
+        self.assertEqual(untouched.attempts, 0)
+
+    @override_settings(NEWSLETTER_EMAIL_PROVIDER='bird', BIRD_API_KEY='')
+    @patch('newsletter.management.commands.send_newsletter_confirmations.Bird')
+    def test_missing_bird_key_never_uses_process_credentials(self, bird):
+        self.subscriber.status = 'pending'
+        self.subscriber.save()
+        item = ConfirmationEmail.objects.create(subscriber=self.subscriber, token_version=self.subscriber.token_version)
+        call_command('send_newsletter_confirmations', stdout=StringIO(), stderr=StringIO())
+        bird.assert_not_called()
+        item.refresh_from_db()
+        self.assertTrue(item.failed)
+        self.assertIsNone(item.sent_at)

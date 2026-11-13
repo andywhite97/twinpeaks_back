@@ -291,6 +291,7 @@ CELERY_TASK_SOFT_TIME_LIMIT = int(os.getenv("CELERY_TASK_SOFT_TIME_LIMIT", "300"
 
 
 BIRD_API_KEY = os.getenv("BIRD_API_KEY", "")
+NEWSLETTER_EMAIL_PROVIDER = os.getenv('NEWSLETTER_EMAIL_PROVIDER', 'bird')
 
 # Quotation currency. Preserve the existing environment variable name.
 SHOP_CURRENCY = os.getenv("SHOP_CURRENCY", "SZL")
