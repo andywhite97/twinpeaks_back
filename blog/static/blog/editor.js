@@ -29,5 +29,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   source.before(toolbar, editor);
   source.hidden = true;
-  source.closest('form').addEventListener('submit', () => { source.value = editor.innerHTML; });
+  const sourceButton = document.createElement('button');
+  sourceButton.type = 'button'; sourceButton.textContent = 'Edit HTML';
+  sourceButton.setAttribute('aria-pressed', 'false');
+  sourceButton.addEventListener('click', () => {
+    const showSource = source.hidden;
+    if (showSource) source.value = editor.innerHTML;
+    // Keep pasted source out of innerHTML until the server has sanitized it.
+    if (!showSource) { source.closest('form').requestSubmit(); return; }
+    source.hidden = false; editor.hidden = true;
+    toolbar.querySelectorAll('button').forEach(button => { if (button !== sourceButton) button.disabled = true; });
+    sourceButton.textContent = 'Save HTML'; sourceButton.setAttribute('aria-pressed', 'true');
+    source.focus();
+  });
+  toolbar.append(sourceButton);
+  source.closest('form').addEventListener('submit', () => { if (source.hidden) source.value = editor.innerHTML; });
 });
+
