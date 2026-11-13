@@ -1,0 +1,29 @@
+{% autoescape off %}TWINPEAKS INVESTMENT — THE JOURNAL
+Ideas for what comes next.
+
+Hello,
+Here’s a fresh selection of practical insights from TwinPeaks.
+
+{{ featured.category }} · {{ featured.reading_minutes }} min read
+{{ featured.title }}
+{{ featured.excerpt }}
+Read the featured article: {{ featured.url }}
+{% if articles %}
+ALSO IN THE JOURNAL
+{% for article in articles %}
+{{ article.category }} — {{ article.title }}
+Read article: {{ article.url }}
+{% endfor %}{% endif %}
+Need advice for your setup?
+Explore solutions for your business: {{ solutions_url }}
+
+TwinPeaks Investment
+Built on Vision, Driven by Progress.
+{{ support_email }}
+{{ site_url }}
+
+You’re receiving this because you subscribed to TwinPeaks updates.
+Unsubscribe: {{ unsubscribe_url }}
+
+© {{ year }} TwinPeaks Investment
+{% endautoescape %}

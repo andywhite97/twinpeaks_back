@@ -1,0 +1,28 @@
+{% autoescape off %}TWINPEAKS INVESTMENT
+Good insights start here.
+
+Hello,
+
+Thanks for signing up. Please confirm that you’d like to receive practical articles and occasional service updates from TwinPeaks.
+
+What to expect:
+- Practical technology guides
+- Security and networking advice
+- News from the TwinPeaks journal
+
+Confirm my subscription:
+{{ confirmation_url }}
+
+This confirmation link expires in 48 hours.
+
+Didn’t request this? Ignore this email or cancel the signup:
+{{ unsubscribe_url }}
+
+Kind regards,
+TwinPeaks Investment Team
+Built on Vision, Driven by Progress.
+
+{{ support_email }}
+{{ site_url }}
+© {{ year }} TwinPeaks Investment
+{% endautoescape %}

@@ -1,7 +1,8 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from .models import ContactMessage, Quotation
 from .tasks import (
@@ -104,6 +105,7 @@ class EmailTemplateTests(TestCase):
 
     @patch('contact.views.send_quotation_declined_notification')
     def test_decline_endpoint_notifies_once_after_commit(self, notification):
+        self.quote.valid_until = timezone.localdate() + timedelta(days=7)
         self.quote.items.create(title='Installation', quantity=1)
         self.quote.issue()
         with self.captureOnCommitCallbacks(execute=True):

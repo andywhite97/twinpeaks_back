@@ -4,6 +4,7 @@
 <style>
 :root { color-scheme: light dark; supported-color-schemes: light dark; }
 /* Inline colours remain the fallback when a client removes head styles. */
+@media screen and (max-width:480px) { .digest-column { display:block !important; width:100% !important; padding-right:0 !important; } }
 .email-content { color:#082447; background-color:#FFFFFF; }
 .logo-plate { background-color:#FFFFFF; background-image:linear-gradient(#FFFFFF,#FFFFFF); }
 @media (prefers-color-scheme: dark) {
@@ -35,7 +36,7 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:24px 10px;">
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
 <table class="email-surface" bgcolor="#FFFFFF" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFFFF;color:#082447;border:1px solid #E5EAF0;border-radius:10px;">
-<tr><td class="brand-header" bgcolor="#FFFFFF" style="padding:28px 24px;background-color:#FFFFFF;border-radius:10px 10px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="72%"><table role="presentation" cellpadding="8" cellspacing="0"><tr><td class="logo-plate" bgcolor="#FFFFFF" style="background-color:#FFFFFF;background-image:linear-gradient(#FFFFFF,#FFFFFF);border-radius:4px;"><a href="{{ site_url }}"><img src="{{ assets_url }}/logo.png" width="250" alt="TwinPeaks Investment" style="display:block;width:100%;max-width:250px;height:auto;border:0;color:#082447;background-color:#FFFFFF;background-image:linear-gradient(#FFFFFF,#FFFFFF);"></a></td></tr></table></td><td class="brand-label" align="right" style="font-size:10px;line-height:16px;color:#082447;">Technology<br>Security<br>Digital Solutions</td></tr></table></td></tr>
+<tr><td class="brand-header" bgcolor="#FFFFFF" style="padding:28px 24px;background-color:#FFFFFF;border-radius:10px 10px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="72%"><table role="presentation" cellpadding="8" cellspacing="0"><tr><td class="logo-plate" bgcolor="#FFFFFF" style="background-color:#FFFFFF;background-image:linear-gradient(#FFFFFF,#FFFFFF);border-radius:4px;"><a href="{{ site_url }}"><img src="{{ assets_url }}/logo.png" width="{{ logo_width|default:250 }}" alt="TwinPeaks Investment" style="display:block;width:100%;max-width:{{ logo_width|default:250 }}px;height:auto;border:0;color:#082447;background-color:#FFFFFF;background-image:linear-gradient(#FFFFFF,#FFFFFF);"></a></td></tr></table></td><td class="brand-label" align="right" style="font-size:10px;line-height:16px;color:#082447;">Technology<br>Security<br>Digital Solutions</td></tr></table></td></tr>
 <tr><td bgcolor="#031E36" background="{{ assets_url }}/{{ banner_image }}" style="background-color:#031E36;background-image:url('{{ assets_url }}/{{ banner_image }}');background-size:cover;background-position:center right;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="70%" bgcolor="#032744" style="padding:28px 22px;color:#FFFFFF;background-color:#032744;">
 <p style="margin:0 0 14px;color:#8DD7FF;font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">{% block eyebrow %}TwinPeaks Investment{% endblock %}</p>
@@ -53,7 +54,7 @@
 <tr><td width="26" style="color:#00B4D8;">&#9993;</td><td><a href="mailto:{{ support_email }}" style="color:#E5F2FF;text-decoration:none;">{{ support_email }}</a></td></tr>
 {% if company.address %}<tr><td width="26" valign="top" style="color:#00B4D8;">&#9679;</td><td>{{ company.address|linebreaksbr }}</td></tr>{% endif %}
 <tr><td width="26" style="color:#00B4D8;">&#8853;</td><td><a href="{{ site_url }}" style="color:#E5F2FF;text-decoration:none;">{{ site_url }}</a></td></tr></table>
-<p style="margin:20px 0 0;padding-top:14px;border-top:1px solid #0872AD;text-align:center;font-size:10px;line-height:16px;">This email is intended for the recipient only. If you received it in error, please let us know and delete it.</p>
+{% block footer_notice %}<p style="margin:20px 0 0;padding-top:14px;border-top:1px solid #0872AD;text-align:center;font-size:10px;line-height:16px;">This email is intended for the recipient only. If you received it in error, please let us know and delete it.</p>{% endblock %}
 <p style="margin:8px 0 0;text-align:center;font-size:10px;color:#A8BDD5;">&copy; {{ year }} TwinPeaks Investment</p>
 </td></tr></table>
 <!--[if mso]></td></tr></table><![endif]-->

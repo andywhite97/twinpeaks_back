@@ -1,0 +1,22 @@
+{% extends "contact/emails/base.html" %}
+{% block preheader %}Fresh perspectives for your business technology. {{ featured.title }}{% endblock %}
+{% block eyebrow %}The TwinPeaks journal{% endblock %}
+{% block heading %}Ideas for what comes next.{% endblock %}
+{% block banner_copy %}Fresh perspectives for your business technology.{% endblock %}
+{% block content %}
+<p style="margin:0 0 8px;"><strong>Hello,</strong></p><p style="margin:0 0 24px;">Here’s a fresh selection of practical insights from TwinPeaks.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+{% if featured.image %}<td class="digest-column" width="45%" valign="top" style="padding:0 18px 18px 0;"><a href="{{ featured.url }}"><img src="{{ featured.image }}" alt="{{ featured.image_alt }}" width="220" style="display:block;width:100%;max-width:220px;height:auto;border:0;border-radius:8px;"></a></td>{% endif %}
+<td class="digest-column" valign="top" style="padding-bottom:18px;">
+<p class="email-accent" style="margin:0 0 8px;font-size:11px;line-height:17px;font-weight:bold;color:#0B3D91;text-transform:uppercase;">{{ featured.category }} · {{ featured.reading_minutes }} min read</p>
+<h2 style="margin:0 0 10px;font-size:23px;line-height:29px;">{{ featured.title }}</h2><p style="margin:0 0 16px;font-size:14px;line-height:22px;">{{ featured.excerpt }}</p>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td class="email-button" bgcolor="#0B3D91" style="background-color:#0B3D91;border-radius:6px;"><a class="email-button" href="{{ featured.url }}" style="display:inline-block;padding:12px 16px;border:1px solid #0B3D91;border-radius:6px;color:#FFFFFF;background-color:#0B3D91;font-size:13px;line-height:20px;font-weight:bold;text-decoration:none;">Read the featured article</a></td></tr></table>
+</td></tr></table>
+{% if articles %}<h2 style="margin:12px 0;font-size:21px;line-height:28px;">Also in the journal</h2>
+{% for article in articles %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:14px 0;border-top:1px solid #70839A;">
+<p class="email-accent" style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#0B3D91;text-transform:uppercase;">{{ article.category }}</p><p style="margin:0 0 6px;font-size:15px;line-height:23px;">{{ article.title }}</p><a class="email-link" href="{{ article.url }}" style="font-size:13px;line-height:20px;font-weight:bold;color:#0B3D91;">Read article →</a>
+</td></tr></table>{% endfor %}{% endif %}
+<table class="email-panel" bgcolor="#EEF5FD" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;background-color:#EEF5FD;border-radius:8px;"><tr><td style="padding:18px 20px;"><h2 style="margin:0 0 6px;font-size:20px;line-height:26px;">Need advice for your setup?</h2><p style="margin:0 0 10px;font-size:14px;line-height:22px;">Explore solutions for your business.</p><a class="email-link" href="{{ solutions_url }}" style="font-size:14px;font-weight:bold;color:#0B3D91;">Explore our solutions →</a></td></tr></table>
+{% endblock %}
+{% block signature %}{% endblock %}
+{% block footer_notice %}<p style="margin:20px 0 0;padding-top:14px;border-top:1px solid #0872AD;text-align:center;font-size:11px;line-height:18px;color:#E5F2FF;">You’re receiving this because you subscribed to TwinPeaks updates.</p><p style="margin:10px 0 0;text-align:center;font-size:13px;line-height:22px;"><a href="{{ unsubscribe_url }}" style="display:inline-block;padding:8px;color:#FFFFFF;text-decoration:underline;">Unsubscribe</a></p>{% endblock %}
