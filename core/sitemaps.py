@@ -2,6 +2,7 @@ from django.contrib.sitemaps import Sitemap
 from django.conf import settings
 from homepage.models import Project
 from urllib.parse import urlsplit
+from blog.models import BlogPost
 
 
 class PublicSitemap(Sitemap):
@@ -20,7 +21,7 @@ class StaticViewSitemap(PublicSitemap):
     changefreq = "weekly"
 
     def items(self):
-        return ["/", "/solutions", "/projects", "/about", "/contact", "/request-quote"]
+        return ["/", "/solutions", "/projects", "/about", "/contact", "/request-quote", "/blog"]
 
     def location(self, item):
         return item
@@ -38,3 +39,14 @@ class ProjectSitemap(PublicSitemap):
 
     def location(self, obj):
         return f"/projects/{obj.slug}"
+
+
+class BlogSitemap(PublicSitemap):
+    def items(self):
+        return BlogPost.published()
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+    def location(self, obj):
+        return f'/blog/{obj.slug}'

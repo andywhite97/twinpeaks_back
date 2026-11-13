@@ -21,7 +21,7 @@ from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshVie
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from core.sitemaps import ProjectSitemap, StaticViewSitemap
+from core.sitemaps import BlogSitemap, ProjectSitemap, StaticViewSitemap
 
 admin.site.site_header = "TwinPeaks Investment"
 admin.site.site_title = "TwinPeaks Admin"
@@ -30,7 +30,7 @@ admin.site.site_url = settings.PUBLIC_SITE_URL
 
 urlpatterns = [
     path("", RedirectView.as_view(url="/admin/", permanent=False)),
-    path("sitemap.xml", sitemap, {"sitemaps": {"static": StaticViewSitemap, "projects": ProjectSitemap}}, name="django.contrib.sitemaps.views.sitemap"),
+    path("sitemap.xml", sitemap, {"sitemaps": {"static": StaticViewSitemap, "projects": ProjectSitemap, "blog": BlogSitemap}}, name="django.contrib.sitemaps.views.sitemap"),
     path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path('admin/', admin.site.urls),
