@@ -2,7 +2,7 @@
 Ideas for what comes next.
 
 Hello,
-Here’s a fresh selection of practical insights from TwinPeaks.
+{% if introduction %}{{ introduction }}{% else %}Here’s a fresh selection of practical insights from TwinPeaks.{% endif %}
 
 {{ featured.category }} · {{ featured.reading_minutes }} min read
 {{ featured.title }}

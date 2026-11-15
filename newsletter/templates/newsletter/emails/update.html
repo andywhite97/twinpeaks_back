@@ -4,7 +4,7 @@
 {% block heading %}Ideas for what comes next.{% endblock %}
 {% block banner_copy %}Fresh perspectives for your business technology.{% endblock %}
 {% block content %}
-<p style="margin:0 0 8px;"><strong>Hello,</strong></p><p style="margin:0 0 24px;">Here’s a fresh selection of practical insights from TwinPeaks.</p>
+<p style="margin:0 0 8px;"><strong>Hello,</strong></p><p style="margin:0 0 24px;">{% if introduction %}{{ introduction|linebreaksbr }}{% else %}Here’s a fresh selection of practical insights from TwinPeaks.{% endif %}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
 {% if featured.image %}<td class="digest-column" width="45%" valign="top" style="padding:0 18px 18px 0;"><a href="{{ featured.url }}"><img src="{{ featured.image }}" alt="{{ featured.image_alt }}" width="220" style="display:block;width:100%;max-width:220px;height:auto;border:0;border-radius:8px;"></a></td>{% endif %}
 <td class="digest-column" valign="top" style="padding-bottom:18px;">

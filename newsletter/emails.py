@@ -42,7 +42,7 @@ def confirmation_email(subscriber):
     })
 
 
-def newsletter_update_email(subscriber, featured, articles=(), *, subject):
+def newsletter_update_email(subscriber, featured, articles=(), *, subject, introduction='', unsubscribe_url=None):
     """Prepare a recipient-specific digest for the future campaign sender."""
     if subscriber.status != 'confirmed':
         raise ValueError('Newsletter updates require a confirmed subscription')
@@ -69,5 +69,6 @@ def newsletter_update_email(subscriber, featured, articles=(), *, subject):
         })
     return render_newsletter_email('update', subject, {
         'featured': cards[0], 'articles': cards[1:],
-        'unsubscribe_url': subscription_url(subscriber, 'unsubscribe'),
+        'introduction': introduction,
+        'unsubscribe_url': unsubscribe_url or subscription_url(subscriber, 'unsubscribe'),
     })
