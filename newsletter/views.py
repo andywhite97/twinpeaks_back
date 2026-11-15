@@ -10,6 +10,8 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from services.models import Solution
 from .models import ConfirmationEmail, Subscriber, SubscriptionEvent
+from .delivery import send_confirmation
+from .tokens import subscription_token
 
 CONSENT = 'I agree to receive TwinPeaks articles and occasional service updates by email. I can unsubscribe at any time.'
 
@@ -61,11 +63,15 @@ class Subscribe(PublicNewsletterView):
                 subscriber.interests.set(data.get('interests', []))
                 SubscriptionEvent.objects.create(subscriber=subscriber, event='signup_requested')
                 ConfirmationEmail.objects.create(subscriber=subscriber, token_version=subscriber.token_version)
+            # Also recover an unsent signup made while scheduled delivery was disabled.
+            confirmation = ConfirmationEmail.objects.filter(
+                subscriber=subscriber, token_version=subscriber.token_version,
+                sent_at=None, attempts__lt=3, created_at__gte=now - timedelta(hours=48),
+            ).first() if subscriber.status == 'pending' else None
+            if confirmation:
+                # Runs synchronously after commit, before the request finishes.
+                transaction.on_commit(lambda pk=confirmation.pk: send_confirmation(pk))
         return Response({'message': 'If this address needs confirmation, we will email a confirmation link. Please check your inbox and spam folder.'}, status=202)
-
-
-def subscription_token(subscriber, action):
-    return signing.dumps({'id': subscriber.pk, 'version': str(subscriber.token_version)}, salt=f'newsletter-{action}')
 
 
 class SubscriptionAction(PublicNewsletterView):

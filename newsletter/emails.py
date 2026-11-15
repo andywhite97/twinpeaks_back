@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from core.models import CompanyProfile
-from .views import subscription_token
+from .tokens import subscription_token
 
 CONFIRMATION_SUBJECT = 'Confirm your TwinPeaks newsletter subscription'
 

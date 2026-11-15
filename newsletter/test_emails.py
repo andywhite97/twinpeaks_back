@@ -65,7 +65,7 @@ class NewsletterEmailTests(TestCase):
         self.subscriber.status = 'pending'
         self.subscriber.save()
         item = ConfirmationEmail.objects.create(subscriber=self.subscriber, token_version=self.subscriber.token_version)
-        with patch('newsletter.management.commands.send_newsletter_confirmations.send_mail', return_value=0):
+        with patch('newsletter.delivery.send_mail', return_value=0):
             call_command('send_newsletter_confirmations', stdout=StringIO(), stderr=StringIO())
         item.refresh_from_db()
         self.assertTrue(item.failed)
@@ -77,7 +77,7 @@ class NewsletterEmailTests(TestCase):
         self.assertIn('intended for the recipient only', html)
 
     @override_settings(NEWSLETTER_EMAIL_PROVIDER='bird', BIRD_API_KEY='synthetic-test-key')
-    @patch('newsletter.management.commands.send_newsletter_confirmations.Bird')
+    @patch('newsletter.delivery.Bird')
     def test_bird_delivery_is_recipient_scoped_and_not_repeated(self, bird):
         self.subscriber.status = 'pending'
         self.subscriber.save()
@@ -97,7 +97,7 @@ class NewsletterEmailTests(TestCase):
         self.assertEqual(untouched.attempts, 0)
 
     @override_settings(NEWSLETTER_EMAIL_PROVIDER='bird', BIRD_API_KEY='')
-    @patch('newsletter.management.commands.send_newsletter_confirmations.Bird')
+    @patch('newsletter.delivery.Bird')
     def test_missing_bird_key_never_uses_process_credentials(self, bird):
         self.subscriber.status = 'pending'
         self.subscriber.save()
